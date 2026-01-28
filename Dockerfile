@@ -22,8 +22,11 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 # Create non-root user (required for Chromium)
 RUN useradd -m -s /bin/bash converter && \
-    mkdir -p /data && \
-    chown converter:converter /data
+    mkdir -p /data /filters && \
+    chown converter:converter /data /filters
+
+# Copy Lua filters
+COPY filters/ /filters/
 
 # Create working directory
 WORKDIR /data

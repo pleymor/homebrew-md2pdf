@@ -99,9 +99,10 @@ docker run --rm \
     -o "/data/$OUTPUT_FILE" \
     --pdf-engine=xelatex \
     --filter mermaid-filter \
+    --lua-filter /filters/alerts.lua \
     -V mainfont="$FONT" \
     -V geometry:margin="$MARGIN" \
-    -V header-includes='\let\origincludegraphics\includegraphics \renewcommand{\includegraphics}[2][]{\begin{center}\origincludegraphics[#1]{#2}\end{center}}'
+    -V header-includes='\usepackage{tcolorbox} \let\origincludegraphics\includegraphics \renewcommand{\includegraphics}[2][]{\begin{center}\origincludegraphics[#1]{#2}\end{center}}'
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ PDF created successfully: $OUTPUT${NC}"
