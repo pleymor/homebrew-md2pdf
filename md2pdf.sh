@@ -98,6 +98,9 @@ docker run --rm \
     pandoc "/data/$INPUT_FILE" \
     -o "/data/$OUTPUT_FILE" \
     --pdf-engine=xelatex \
+    --toc \
+    --toc-depth=3 \
+    --number-sections \
     --filter mermaid-filter \
     --lua-filter /filters/alerts.lua \
     -V mainfont="$FONT" \
