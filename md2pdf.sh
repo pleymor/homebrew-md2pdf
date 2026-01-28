@@ -94,6 +94,8 @@ docker run --rm \
     -e MERMAID_FILTER_WIDTH=800 \
     -e MERMAID_FILTER_HEIGHT=1000 \
     -e MERMAID_FILTER_FORMAT=pdf \
+    -e MERMAID_FILTER_THEME=forest \
+    -e MERMAID_FILTER_BACKGROUND=transparent \
     md2pdf \
     pandoc "/data/$INPUT_FILE" \
     -o "/data/$OUTPUT_FILE" \
