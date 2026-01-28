@@ -1,0 +1,14 @@
+% tcolorbox for alert boxes
+\usepackage{tcolorbox}
+
+% Center all images
+\let\origincludegraphics\includegraphics
+\renewcommand{\includegraphics}[2][]{\begin{center}\origincludegraphics[#1]{#2}\end{center}}
+
+% Emoji/Symbol support via Symbola font (compatible with XeLaTeX)
+\usepackage{ucharclasses}
+\newfontfamily\symbola{Symbola}
+\setTransitionsForSymbols{\symbola}{}
+\setTransitionTo{MiscellaneousSymbolsAndPictographs}{\symbola}
+\setTransitionTo{Emoticons}{\symbola}
+\setTransitionTo{Dingbats}{\symbola}

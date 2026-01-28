@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     texlive-latex-recommended \
     texlive-latex-extra \
     fonts-dejavu \
+    fonts-symbola \
     chromium \
     && rm -rf /var/lib/apt/lists/*
 
@@ -25,8 +26,9 @@ RUN useradd -m -s /bin/bash converter && \
     mkdir -p /data /filters && \
     chown converter:converter /data /filters
 
-# Copy Lua filters
+# Copy Lua filters and templates
 COPY filters/ /filters/
+COPY templates/ /templates/
 
 # Create working directory
 WORKDIR /data

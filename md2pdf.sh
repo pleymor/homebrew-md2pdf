@@ -103,9 +103,8 @@ docker run --rm \
     --number-sections \
     --filter mermaid-filter \
     --lua-filter /filters/alerts.lua \
-    -V mainfont="$FONT" \
-    -V geometry:margin="$MARGIN" \
-    -V header-includes='\usepackage{tcolorbox} \let\origincludegraphics\includegraphics \renewcommand{\includegraphics}[2][]{\begin{center}\origincludegraphics[#1]{#2}\end{center}}'
+    -H /templates/header.tex \
+    -V geometry:margin="$MARGIN"
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ PDF created successfully: $OUTPUT${NC}"
