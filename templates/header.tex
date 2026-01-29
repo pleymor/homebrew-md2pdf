@@ -1,9 +1,64 @@
+% Set English as document language (for dates)
+\usepackage{polyglossia}
+\setdefaultlanguage{english}
+
+% Prevent blank pages before chapters
+\let\cleardoublepage\clearpage
+
+% Prevent blank pages due to float placement
+\raggedbottom
+\usepackage{float}
+
+% Completely disable figure floating - redefine as non-floating environment
+\usepackage{caption}
+\usepackage[export]{adjustbox}
+\let\origfigure\figure
+\let\endorigfigure\endfigure
+\renewenvironment{figure}[1][htbp]{%
+  \par\noindent\minipage{\textwidth}\centering
+}{%
+  \endminipage\par
+}
+
+% Make LaTeX less strict about float pages
+\renewcommand{\floatpagefraction}{.99}
+\renewcommand{\topfraction}{.99}
+\renewcommand{\bottomfraction}{.99}
+\renewcommand{\textfraction}{.01}
+\setcounter{totalnumber}{50}
+\setcounter{topnumber}{50}
+\setcounter{bottomnumber}{50}
+
+% etoolbox for advanced LaTeX manipulation
+\usepackage{etoolbox}
+
+% Keep section headings with following content
+\usepackage{needspace}
+\usepackage{titlesec}
+\titleformat{\section}{\needspace{5\baselineskip}\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\needspace{4\baselineskip}\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\needspace{3\baselineskip}\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+\titleformat{\paragraph}[hang]{\needspace{3\baselineskip}\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+% Allow section headings at bottom of page (reduce orphan penalties)
+\widowpenalty=0
+\clubpenalty=0
+\brokenpenalty=0
+\interlinepenalty=0
+\predisplaypenalty=0
+\postdisplaypenalty=0
+
 % tcolorbox for alert boxes
 \usepackage{tcolorbox}
 
-% Center all images
+% Center all images with max height constraint to prevent full-page images
 \let\origincludegraphics\includegraphics
-\renewcommand{\includegraphics}[2][]{\begin{center}\origincludegraphics[#1]{#2}\end{center}}
+\renewcommand{\includegraphics}[2][]{%
+  \noindent\makebox[\textwidth]{%
+    \origincludegraphics[#1,width=\textwidth,max height=0.7\textheight,keepaspectratio]{#2}%
+  }%
+}
 
 % Emoji/Symbol support via Symbola font (compatible with XeLaTeX)
 \usepackage{ucharclasses}

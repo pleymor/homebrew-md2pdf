@@ -1,0 +1,37 @@
+% Custom title page template
+\begin{titlepage}
+    \centering
+
+    % Logo (if provided) - use original includegraphics to avoid full-width scaling
+    % 400px ≈ 300pt at 72dpi
+    \ifdefined\titlelogo
+        \vspace*{2cm}
+        \origincludegraphics[max width=300pt,max height=300pt,keepaspectratio]{\titlelogo}
+        \vspace{0.5cm}
+    \else
+        \vspace*{5cm}
+    \fi
+
+    % Title
+    \ifdefined\doctitle
+        {\LARGE\bfseries \doctitle \par}
+    \fi
+
+    \vspace{1.5cm}
+
+    % Author
+    \ifdefined\docauthor
+        {\large \docauthor \par}
+    \fi
+
+    \vspace{0.5cm}
+
+    % Date
+    \ifdefined\docdate
+        {\large \docdate \par}
+    \else
+        {\large \today \par}
+    \fi
+
+    \vfill
+\end{titlepage}

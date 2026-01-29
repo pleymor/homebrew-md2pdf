@@ -28,7 +28,25 @@ chmod +x md2pdf.sh
 ./md2pdf.sh input.md output.pdf
 ```
 
-### Avec options
+### Options disponibles
+
+Toutes les options sont optionnelles.
+
+| Option | Description | Valeur par défaut |
+|--------|-------------|-------------------|
+| `-m, --margin SIZE` | Marges du document | `2.5cm` |
+| `-f, --font FONT` | Police principale | `DejaVu Sans` |
+| `--logo FILE` | Logo pour la page de titre | aucun |
+| `--title TITLE` | Titre du document | aucun |
+| `--author AUTHOR` | Auteur du document | aucun |
+| `--date DATE` | Date du document | date du jour |
+| `-h, --help` | Affiche l'aide | - |
+
+> [!NOTE]
+> La page de titre n'est générée que si au moins une des options `--logo`, `--title`, `--author` ou `--date` est spécifiée.
+
+### Exemples
+
 ```bash
 # Changer les marges
 ./md2pdf.sh document.md --margin 3cm
@@ -36,9 +54,47 @@ chmod +x md2pdf.sh
 # Changer la police
 ./md2pdf.sh document.md --font "Arial"
 
+# Avec page de titre complète
+./md2pdf.sh document.md --logo logo.png --title "Mon Rapport" --author "John Doe" --date "January 2026"
+
 # Combiner les options
-./md2pdf.sh document.md output.pdf --margin 2cm --font "Times New Roman"
+./md2pdf.sh document.md output.pdf --margin 2cm --title "Documentation Technique"
 ```
+
+## ✨ Fonctionnalités
+
+### Table des matières automatique
+
+Une table des matières numérotée est générée automatiquement à partir des titres du document (jusqu'à 3 niveaux de profondeur).
+
+### Alertes GitHub
+
+Support des alertes de style GitHub :
+
+```markdown
+> [!NOTE]
+> Information utile pour l'utilisateur.
+
+> [!TIP]
+> Conseil pour optimiser l'utilisation.
+
+> [!IMPORTANT]
+> Information cruciale à ne pas manquer.
+
+> [!WARNING]
+> Attention, action potentiellement risquée.
+
+> [!CAUTION]
+> Danger, action irréversible.
+```
+
+### Diagrammes Mermaid
+
+Les diagrammes Mermaid sont automatiquement convertis en images vectorielles (PDF) avec le thème "forest".
+
+### Support des Emojis
+
+Les emojis Unicode sont supportés dans le document.
 
 ## 📖 Exemple de fichier Markdown
 
@@ -68,9 +124,17 @@ sequenceDiagram
     B->>A: Salut Alice!
 ```
 
+## Notes importantes
+
+> [!NOTE]
+> Ceci est une note informative.
+
+> [!WARNING]
+> Attention à bien sauvegarder avant de continuer.
+
 ## Conclusion
 
-Le texte continue normalement...
+Le texte continue normalement... 🎉
 ```
 
 ## ⚙️ Configuration avancée
