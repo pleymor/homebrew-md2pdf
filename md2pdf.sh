@@ -184,10 +184,9 @@ docker run --rm \
     --lua-filter /filters/no-pagebreak.lua \
     --lua-filter /filters/alerts.lua \
     --lua-filter /filters/horizontal-rule.lua \
-    --lua-filter /filters/toc-pagebreak.lua \
+    --template /templates/config.tex \
     -H /templates/header.tex \
     "${TITLEPAGE_INCLUDE[@]}" \
-    -V geometry:margin="$MARGIN" \
     -f markdown-implicit_figures
 
 CONVERSION_RESULT=$?
