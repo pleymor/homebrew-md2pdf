@@ -1,6 +1,22 @@
 #!/bin/bash
 # md2pdf - Convert Markdown to PDF with Mermaid support
 
+# Determine script location (works with symlinks from Homebrew)
+SCRIPT_SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SCRIPT_SOURCE" ]; do
+    SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_SOURCE")" && pwd)"
+    SCRIPT_SOURCE="$(readlink "$SCRIPT_SOURCE")"
+    [[ $SCRIPT_SOURCE != /* ]] && SCRIPT_SOURCE="$SCRIPT_DIR/$SCRIPT_SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_SOURCE")" && pwd)"
+
+# For Homebrew installation, resources are in ../libexec
+if [ -d "$SCRIPT_DIR/../libexec/templates" ]; then
+    RESOURCE_DIR="$SCRIPT_DIR/../libexec"
+else
+    RESOURCE_DIR="$SCRIPT_DIR"
+fi
+
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -113,8 +129,7 @@ echo -e "${GREEN}Converting $INPUT to $OUTPUT_PATH...${NC}"
 # Build Docker image if it doesn't exist
 if [[ "$(docker images -q md2pdf 2> /dev/null)" == "" ]]; then
     echo -e "${GREEN}Building Docker image (first time only)...${NC}"
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    docker build -t md2pdf "$SCRIPT_DIR"
+    docker build -t md2pdf "$RESOURCE_DIR"
 fi
 
 # Build title page header with LaTeX definitions (for logo override)
