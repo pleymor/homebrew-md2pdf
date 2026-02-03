@@ -37,13 +37,12 @@ Toutes les options sont optionnelles.
 | `-m, --margin SIZE` | Marges du document | `2.5cm` |
 | `-f, --font FONT` | Police principale | `DejaVu Sans` |
 | `--logo FILE` | Logo pour la page de titre | aucun |
-| `--title TITLE` | Titre du document | aucun |
 | `--author AUTHOR` | Auteur du document | aucun |
 | `--date DATE` | Date du document | date du jour |
 | `-h, --help` | Affiche l'aide | - |
 
 > [!NOTE]
-> La page de titre n'est générée que si au moins une des options `--logo`, `--title`, `--author` ou `--date` est spécifiée.
+> La page de titre n'est générée que si au moins une des options `--logo`, `--author` ou `--date` est spécifiée.
 
 ### Exemples
 
@@ -55,10 +54,10 @@ Toutes les options sont optionnelles.
 ./md2pdf.sh document.md --font "Arial"
 
 # Avec page de titre complète
-./md2pdf.sh document.md --logo logo.png --title "Mon Rapport" --author "John Doe" --date "January 2026"
+./md2pdf.sh document.md --logo logo.png --author "John Doe" --date "January 2026"
 
 # Combiner les options
-./md2pdf.sh document.md output.pdf --margin 2cm --title "Documentation Technique"
+./md2pdf.sh document.md output.pdf --margin 2cm
 ```
 
 ## ✨ Fonctionnalités

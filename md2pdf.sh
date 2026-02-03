@@ -14,7 +14,6 @@ usage() {
     echo "  -m, --margin SIZE      Set margins (default: 2.5cm)"
     echo "  -f, --font FONT        Set main font (default: DejaVu Sans)"
     echo "  --logo FILE            Add logo to title page"
-    echo "  --title TITLE          Set document title"
     echo "  --author AUTHOR        Set document author"
     echo "  --date DATE            Set document date"
     echo "  -h, --help             Show this help message"
@@ -22,7 +21,7 @@ usage() {
     echo "Examples:"
     echo "  ./md2pdf.sh document.md"
     echo "  ./md2pdf.sh document.md output.pdf"
-    echo "  ./md2pdf.sh document.md --logo logo.png --title 'My Document' --author 'John Doe'"
+    echo "  ./md2pdf.sh document.md --logo logo.png --author 'John Doe'"
     exit 1
 }
 
@@ -38,7 +37,6 @@ OUTPUT=""
 MARGIN="2.5cm"
 FONT="DejaVu Sans"
 LOGO=""
-TITLE=""
 AUTHOR=""
 DATE=""
 
@@ -57,10 +55,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --logo)
             LOGO="$2"
-            shift 2
-            ;;
-        --title)
-            TITLE="$2"
             shift 2
             ;;
         --author)
@@ -127,7 +121,7 @@ fi
 TITLEPAGE_HEADER=""
 LOGO_COPIED=""
 HEADER_INCLUDE=()
-if [ -n "$LOGO" ] || [ -n "$TITLE" ] || [ -n "$AUTHOR" ] || [ -n "$DATE" ]; then
+if [ -n "$LOGO" ] || [ -n "$AUTHOR" ] || [ -n "$DATE" ]; then
     TITLEPAGE_HEADER="$INPUT_DIR/.titlepage-header.tex"
 
     # Create header file with variable definitions
@@ -146,11 +140,6 @@ if [ -n "$LOGO" ] || [ -n "$TITLE" ] || [ -n "$AUTHOR" ] || [ -n "$DATE" ]; then
             fi
         fi
         echo "\\newcommand{\\titlelogo}{/data/$LOGO_FILE}" >> "$TITLEPAGE_HEADER"
-    fi
-    if [ -n "$TITLE" ]; then
-        # Escape special LaTeX characters in title
-        ESCAPED_TITLE=$(echo "$TITLE" | sed 's/\\/\\\\/g; s/&/\\&/g; s/%/\\%/g; s/\$/\\$/g; s/#/\\#/g; s/_/\\_/g; s/{/\\{/g; s/}/\\}/g')
-        echo "\\newcommand{\\doctitle}{$ESCAPED_TITLE}" >> "$TITLEPAGE_HEADER"
     fi
     if [ -n "$AUTHOR" ]; then
         ESCAPED_AUTHOR=$(echo "$AUTHOR" | sed 's/\\/\\\\/g; s/&/\\&/g; s/%/\\%/g; s/\$/\\$/g; s/#/\\#/g; s/_/\\_/g; s/{/\\{/g; s/}/\\}/g')
