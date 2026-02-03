@@ -175,15 +175,15 @@
 % No header - plain page style
 \pagestyle{plain}
 
-% Custom title with logo
+% Define title variables from pandoc metadata (providecommand allows override via -H)
 $if(title)$
-\title{\vspace{-2cm}\includegraphics[height=8cm]{figures/metyis/logos/Metyis_Logo-12.png}\\[-1.5cm]$title$}
+\providecommand{\doctitle}{$title$}
 $endif$
 $if(author)$
-\author{$author$}
+\providecommand{\docauthor}{$for(author)$$author$$sep$, $endfor$}
 $endif$
 $if(date)$
-\date{$date$}
+\providecommand{\docdate}{$date$}
 $endif$
 
 $for(header-includes)$
@@ -191,10 +191,6 @@ $header-includes$
 $endfor$
 
 \begin{document}
-
-$if(title)$
-\maketitle
-$endif$
 
 $for(include-before)$
 $include-before$

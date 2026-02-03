@@ -123,10 +123,10 @@ if [[ "$(docker images -q md2pdf 2> /dev/null)" == "" ]]; then
     docker build -t md2pdf "$SCRIPT_DIR"
 fi
 
-# Build title page header with LaTeX definitions
-TITLEPAGE_INCLUDE=()
+# Build title page header with LaTeX definitions (for logo override)
 TITLEPAGE_HEADER=""
 LOGO_COPIED=""
+HEADER_INCLUDE=()
 if [ -n "$LOGO" ] || [ -n "$TITLE" ] || [ -n "$AUTHOR" ] || [ -n "$DATE" ]; then
     TITLEPAGE_HEADER="$INPUT_DIR/.titlepage-header.tex"
 
@@ -161,7 +161,7 @@ if [ -n "$LOGO" ] || [ -n "$TITLE" ] || [ -n "$AUTHOR" ] || [ -n "$DATE" ]; then
         echo "\\newcommand{\\docdate}{$ESCAPED_DATE}" >> "$TITLEPAGE_HEADER"
     fi
 
-    TITLEPAGE_INCLUDE=(-H "/data/.titlepage-header.tex" -B /templates/titlepage.tex)
+    HEADER_INCLUDE=(-H "/data/.titlepage-header.tex")
 fi
 
 # Run conversion
@@ -185,8 +185,10 @@ docker run --rm \
     --lua-filter /filters/alerts.lua \
     --lua-filter /filters/horizontal-rule.lua \
     --template /templates/config.tex \
+    --shift-heading-level-by=-1 \
     -H /templates/header.tex \
-    "${TITLEPAGE_INCLUDE[@]}" \
+    "${HEADER_INCLUDE[@]}" \
+    -B /templates/titlepage.tex \
     -f markdown-implicit_figures
 
 CONVERSION_RESULT=$?
