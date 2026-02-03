@@ -1,9 +1,9 @@
 --[[
-  Pandoc Lua filter to convert horizontal rules to simple lines
-  instead of page breaks
+  Pandoc Lua filter to convert horizontal rules to page breaks
 ]]
 
+---Converts horizontal rules (---) to LaTeX page breaks.
+---@return pandoc.RawBlock LaTeX page break command
 function HorizontalRule()
-  -- Replace horizontal rule with a simple centered line
-  return pandoc.RawBlock("latex", "\\vspace{0.5cm}\\noindent\\rule{\\textwidth}{0.4pt}\\vspace{0.5cm}")
+  return pandoc.RawBlock("latex", "\\newpage")
 end

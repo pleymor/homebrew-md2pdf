@@ -4,6 +4,8 @@
 
 Ce document démontre la conversion Markdown → PDF avec support des diagrammes Mermaid.
 
+---
+
 ## Diagramme de flux
 
 Voici un exemple de diagramme de flux simple :
