@@ -126,11 +126,9 @@ TEMP_OUTPUT_FILE=".tmp_${OUTPUT_FILE}"
 
 echo -e "${GREEN}Converting $INPUT to $OUTPUT_PATH...${NC}"
 
-# Build Docker image if it doesn't exist
-if [[ "$(docker images -q md2pdf 2> /dev/null)" == "" ]]; then
-    echo -e "${GREEN}Building Docker image (first time only)...${NC}"
-    docker build -t md2pdf "$RESOURCE_DIR"
-fi
+# Build Docker image
+echo -e "${GREEN}Building Docker image...${NC}"
+docker build -t md2pdf "$RESOURCE_DIR"
 
 # Build title page header with LaTeX definitions (for logo override)
 TITLEPAGE_HEADER=""
