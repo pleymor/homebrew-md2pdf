@@ -4,6 +4,15 @@ Convertisseur Markdown → PDF avec support natif des diagrammes Mermaid, encaps
 
 ## 🚀 Installation
 
+### Via Homebrew (recommandé)
+
+```bash
+brew tap pleymor/md2pdf
+brew install md2pdf
+```
+
+### Installation manuelle
+
 ```bash
 # 1. Cloner ou télécharger ces fichiers
 # - Dockerfile
@@ -203,6 +212,30 @@ docker rmi md2pdf
 | Portabilité | Excellente | Dépend du système |
 | Mise à jour | Rebuild image | Mise à jour manuelle |
 | Performance | Légèrement plus lent | Plus rapide |
+
+## 🍺 Mettre à jour la formule Homebrew (contributeurs)
+
+Quand une nouvelle version est publiée :
+
+1. **Créer un tag de release** sur le repo principal :
+   ```bash
+   git tag v1.x.x
+   git push origin v1.x.x
+   ```
+
+2. **Obtenir le SHA256** de l'archive :
+   ```bash
+   curl -sL https://github.com/pleymor/md2pdf/archive/refs/tags/v1.x.x.tar.gz | shasum -a 256
+   ```
+
+3. **Mettre à jour la formule** dans `Formula/md2pdf.rb` :
+   - Modifier la ligne `url` avec le nouveau tag
+   - Mettre à jour le `sha256` avec le hash obtenu
+
+4. **Tester la formule** :
+   ```bash
+   brew install --build-from-source Formula/md2pdf.rb
+   ```
 
 ## 📄 Licence
 

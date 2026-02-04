@@ -8,9 +8,8 @@ class Md2pdf < Formula
   depends_on "docker" => :build
 
   def install
-    libexec.install "templates", "filters", "Dockerfile"
+    libexec.install "md2pdf.sh", "templates", "filters", "Dockerfile"
     (bin/"md2pdf").write_env_script libexec/"md2pdf.sh", {}
-    libexec.install "md2pdf.sh"
   end
 
   def caveats
