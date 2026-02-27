@@ -30,6 +30,8 @@ usage() {
     echo "  -m, --margin SIZE      Set margins (default: 2.5cm)"
     echo "  -f, --font FONT        Set main font (default: DejaVu Sans)"
     echo "  --logo FILE            Add logo to title page"
+    echo "  --theme THEME          Set Mermaid theme (default: neutral)"
+    echo "                         Options: default, forest, dark, neutral"
     echo "  --author AUTHOR        Set document author"
     echo "  --date DATE            Set document date"
     echo "  -h, --help             Show this help message"
@@ -38,6 +40,7 @@ usage() {
     echo "  ./md2pdf.sh document.md"
     echo "  ./md2pdf.sh document.md output.pdf"
     echo "  ./md2pdf.sh document.md --logo logo.png --author 'John Doe'"
+    echo "  ./md2pdf.sh document.md --theme dark"
     exit 1
 }
 
@@ -55,6 +58,7 @@ FONT="DejaVu Sans"
 LOGO=""
 AUTHOR=""
 DATE=""
+THEME="neutral"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -79,6 +83,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --date)
             DATE="$2"
+            shift 2
+            ;;
+        --theme)
+            THEME="$2"
             shift 2
             ;;
         *)
@@ -173,7 +181,7 @@ docker run --rm \
     -e MERMAID_FILTER_WIDTH=1200 \
     -e MERMAID_FILTER_HEIGHT=800 \
     -e MERMAID_FILTER_FORMAT=pdf \
-    -e MERMAID_FILTER_THEME=forest \
+    -e MERMAID_FILTER_THEME="$THEME" \
     -e MERMAID_FILTER_BACKGROUND=transparent \
     md2pdf \
     pandoc "/data/$INPUT_FILE" \
