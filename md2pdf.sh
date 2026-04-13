@@ -194,6 +194,7 @@ docker run --rm \
     --lua-filter /filters/no-pagebreak.lua \
     --lua-filter /filters/alerts.lua \
     --lua-filter /filters/horizontal-rule.lua \
+    --lua-filter /filters/table-autofit.lua \
     --template /templates/config.tex \
     --shift-heading-level-by=-1 \
     -H /templates/header.tex \

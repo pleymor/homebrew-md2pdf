@@ -95,13 +95,39 @@ def convertir_markdown(fichier):
 > La simplicité est la sophistication suprême.
 > — Léonard de Vinci
 
-### Tableau
+### Tableau simple
 
 | Outil | Avantage | Inconvénient |
 |-------|----------|--------------|
 | Pandoc | Flexible | Configuration |
 | Typora | Simple | Payant |
 | Docker | Portable | Espace disque |
+
+### Tableau avec colonnes hétérogènes
+
+| ID | Nom | Description | Statut |
+|----|-----|-------------|--------|
+| 1 | Pandoc | Convertisseur universel de documents supportant des dizaines de formats d'entrée et de sortie | Actif |
+| 2 | XeLaTeX | Moteur LaTeX avec support natif Unicode et polices système OpenType/TrueType | Actif |
+| 3 | Mermaid | Outil de génération de diagrammes à partir de texte, intégré dans de nombreuses plateformes | Beta |
+
+### Tableau avec beaucoup de colonnes
+
+| Langue | Typage | Paradigme | Perf. | Écosystème | Courbe |
+|--------|--------|-----------|-------|------------|--------|
+| Python | Dynamique | Multi | Moyenne | Très riche | Douce |
+| Rust | Statique | Système | Haute | Croissant | Raide |
+| Go | Statique | Concurrent | Haute | Solide | Douce |
+| JS | Dynamique | Event-driven | Moyenne | Immense | Moyenne |
+
+### Tableau avec contenu non homogène
+
+| Composant | Entrée | Traitement | Sortie |
+|-----------|--------|------------|--------|
+| Parser Markdown | Fichier `.md` brut avec métadonnées YAML, liens, images et blocs de code imbriqués | Analyse syntaxique | AST |
+| Mermaid Filter | AST | Détection des blocs mermaid, lancement de Chromium headless pour le rendu SVG/PDF de chaque diagramme, puis réinjection dans le document | Diagrammes rendus |
+| Moteur LaTeX | AST enrichi | Compilation | PDF |
+| Post-traitement | PDF brut | Vérification des liens internes, numérotation des pages, génération de la table des matières et ajout des métadonnées XMP au fichier final | PDF finalisé |
 
 ## Diagramme Gantt
 
