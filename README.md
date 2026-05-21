@@ -1,269 +1,269 @@
 # Markdown to PDF Converter with Mermaid Support
 
-Convertisseur Markdown → PDF avec support natif des diagrammes Mermaid, encapsulé dans un conteneur (Docker ou Podman) pour une utilisation simple.
+Markdown → PDF converter with native Mermaid diagram support, packaged in a container (Docker or Podman) for simple usage.
 
 ## 🚀 Installation
 
-### Via Homebrew (recommandé)
+### Via Homebrew (recommended)
 
 ```bash
 brew tap pleymor/md2pdf
 brew install md2pdf
 ```
 
-### Via script d'installation (curl)
+### Via install script (curl)
 
-Pour les systèmes sans Homebrew (Linux), une seule commande suffit (Docker ou Podman requis) :
+For systems without Homebrew (Linux), a single command is enough (Docker or Podman required):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/pleymor/homebrew-md2pdf/main/install.sh | bash
 ```
 
-Le script installe les fichiers dans `~/.local/share/md2pdf` et crée un lien symbolique `md2pdf` dans `~/.local/bin`. Pour épingler une version, utilisez la variable `MD2PDF_VERSION` :
+The script installs the files into `~/.local/share/md2pdf` and creates a `md2pdf` symlink in `~/.local/bin`. To pin a version, use the `MD2PDF_VERSION` variable:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/pleymor/homebrew-md2pdf/main/install.sh | MD2PDF_VERSION=v1.2.0 bash
 ```
 
-### Installation manuelle
+### Manual installation
 
 ```bash
-# 1. Cloner ou télécharger ces fichiers
+# 1. Clone or download these files
 # - Dockerfile
 # - md2pdf.sh
 
-# 2. Rendre le script exécutable
+# 2. Make the script executable
 chmod +x md2pdf.sh
 
-# 3. C'est tout ! Le Docker image sera construit automatiquement au premier usage
+# 3. That's it! The Docker image will be built automatically on first use
 ```
 
-## 📝 Utilisation
+## 📝 Usage
 
-### Utilisation basique
+### Basic usage
 ```bash
 ./md2pdf.sh example.md
-# Crée example.pdf dans le même dossier
+# Creates example.pdf in the same folder
 ```
 
-### Spécifier le nom de sortie
+### Specify the output name
 ```bash
 ./md2pdf.sh input.md output.pdf
 ```
 
-### Options disponibles
+### Available options
 
-Toutes les options sont optionnelles.
+All options are optional.
 
-| Option | Description | Valeur par défaut |
+| Option | Description | Default value |
 |--------|-------------|-------------------|
-| `-m, --margin SIZE` | Marges du document | `2.5cm` |
-| `-f, --font FONT` | Police principale | `DejaVu Sans` |
-| `--logo FILE` | Logo pour la page de titre | aucun |
-| `--author AUTHOR` | Auteur du document | aucun |
-| `--date DATE` | Date du document | date du jour |
-| `-h, --help` | Affiche l'aide | - |
+| `-m, --margin SIZE` | Document margins | `2.5cm` |
+| `-f, --font FONT` | Main font | `DejaVu Sans` |
+| `--logo FILE` | Logo for the title page | none |
+| `--author AUTHOR` | Document author | none |
+| `--date DATE` | Document date | today's date |
+| `-h, --help` | Show help | - |
 
 > [!NOTE]
-> La page de titre n'est générée que si au moins une des options `--logo`, `--author` ou `--date` est spécifiée.
+> The title page is only generated if at least one of the `--logo`, `--author` or `--date` options is specified.
 
-### Exemples
+### Examples
 
 ```bash
-# Changer les marges
+# Change the margins
 ./md2pdf.sh document.md --margin 3cm
 
-# Changer la police
+# Change the font
 ./md2pdf.sh document.md --font "Arial"
 
-# Avec page de titre complète
+# With a full title page
 ./md2pdf.sh document.md --logo logo.png --author "John Doe" --date "January 2026"
 
-# Combiner les options
+# Combine options
 ./md2pdf.sh document.md output.pdf --margin 2cm
 ```
 
-## ✨ Fonctionnalités
+## ✨ Features
 
-### Table des matières automatique
+### Automatic table of contents
 
-Une table des matières numérotée est générée automatiquement à partir des titres du document (jusqu'à 3 niveaux de profondeur).
+A numbered table of contents is generated automatically from the document headings (up to 3 levels deep).
 
-### Alertes GitHub
+### GitHub alerts
 
-Support des alertes de style GitHub :
+Support for GitHub-style alerts:
 
 ```markdown
 > [!NOTE]
-> Information utile pour l'utilisateur.
+> Useful information for the user.
 
 > [!TIP]
-> Conseil pour optimiser l'utilisation.
+> Tip to optimize usage.
 
 > [!IMPORTANT]
-> Information cruciale à ne pas manquer.
+> Crucial information not to be missed.
 
 > [!WARNING]
-> Attention, action potentiellement risquée.
+> Caution, potentially risky action.
 
 > [!CAUTION]
-> Danger, action irréversible.
+> Danger, irreversible action.
 ```
 
-### Diagrammes Mermaid
+### Mermaid diagrams
 
-Les diagrammes Mermaid sont automatiquement convertis en images vectorielles (PDF) avec le thème "forest".
+Mermaid diagrams are automatically converted to vector images (PDF) with the "forest" theme.
 
-### Support des Emojis
+### Emoji support
 
-Les emojis Unicode sont supportés dans le document.
+Unicode emojis are supported in the document.
 
-## 📖 Exemple de fichier Markdown
+## 📖 Example Markdown file
 
 ```markdown
-# Mon Document
+# My Document
 
 ## Introduction
 
-Voici un diagramme de flux :
+Here is a flowchart:
 
 ```mermaid
 graph TD
-    A[Début] --> B{Décision}
-    B -->|Oui| C[Action 1]
-    B -->|Non| D[Action 2]
-    C --> E[Fin]
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Action 1]
+    B -->|No| D[Action 2]
+    C --> E[End]
     D --> E
 ```
 
-## Diagramme de séquence
+## Sequence diagram
 
 ```mermaid
 sequenceDiagram
     participant A as Alice
     participant B as Bob
-    A->>B: Bonjour Bob!
-    B->>A: Salut Alice!
+    A->>B: Hello Bob!
+    B->>A: Hi Alice!
 ```
 
-## Notes importantes
+## Important notes
 
 > [!NOTE]
-> Ceci est une note informative.
+> This is an informative note.
 
 > [!WARNING]
-> Attention à bien sauvegarder avant de continuer.
+> Make sure to save before continuing.
 
 ## Conclusion
 
-Le texte continue normalement... 🎉
+The text continues normally... 🎉
 ```
 
-## ⚙️ Configuration avancée
+## ⚙️ Advanced configuration
 
-### Modifier le Dockerfile
+### Modifying the Dockerfile
 
-Si vous voulez personnaliser l'image (ajouter des polices, etc.) :
+If you want to customize the image (add fonts, etc.):
 
 ```dockerfile
-# Ajouter des polices supplémentaires
+# Add additional fonts
 RUN apt-get update && apt-get install -y \
     fonts-liberation \
     fonts-noto
 ```
 
-Puis reconstruire :
+Then rebuild:
 ```bash
 docker build -t md2pdf .
 ```
 
-## 🐳 Docker ou Podman
+## 🐳 Docker or Podman
 
-md2pdf fonctionne avec **Docker** ou **Podman**. Le moteur est détecté
-automatiquement (Docker prioritaire, puis Podman). Pour forcer un moteur
-particulier, définissez la variable d'environnement `MD2PDF_CONTAINER_ENGINE` :
+md2pdf works with **Docker** or **Podman**. The engine is detected
+automatically (Docker first, then Podman). To force a specific engine,
+set the `MD2PDF_CONTAINER_ENGINE` environment variable:
 
 ```bash
 MD2PDF_CONTAINER_ENGINE=podman ./md2pdf.sh document.md
 ```
 
-## 🔧 Dépannage
+## 🔧 Troubleshooting
 
-### Aucun moteur de conteneur disponible
+### No container engine available
 ```
 Error: No working container engine found.
 ```
-→ Installez et démarrez Docker (Docker Desktop) ou Podman, ou définissez
+→ Install and start Docker (Docker Desktop) or Podman, or set
 `MD2PDF_CONTAINER_ENGINE`.
 
-### Problème de permissions
+### Permission issue
 ```bash
-# Sur Linux, vous pourriez avoir besoin de :
+# On Linux, you may need to:
 sudo usermod -aG docker $USER
-# Puis redémarrer votre session
+# Then restart your session
 ```
 
-### Rebuild de l'image
+### Rebuild the image
 ```bash
-docker rmi md2pdf   # ou: podman rmi md2pdf
-./md2pdf.sh document.md  # Reconstruira automatiquement
+docker rmi md2pdf   # or: podman rmi md2pdf
+./md2pdf.sh document.md  # Will rebuild automatically
 ```
 
-## 🎨 Types de diagrammes Mermaid supportés
+## 🎨 Supported Mermaid diagram types
 
-- **Flowchart** : `graph TD`, `graph LR`
-- **Sequence** : `sequenceDiagram`
-- **Class** : `classDiagram`
-- **State** : `stateDiagram-v2`
-- **ER** : `erDiagram`
-- **Gantt** : `gantt`
-- **Pie** : `pie`
-- **Git graph** : `gitGraph`
+- **Flowchart**: `graph TD`, `graph LR`
+- **Sequence**: `sequenceDiagram`
+- **Class**: `classDiagram`
+- **State**: `stateDiagram-v2`
+- **ER**: `erDiagram`
+- **Gantt**: `gantt`
+- **Pie**: `pie`
+- **Git graph**: `gitGraph`
 
-## 📦 Avantages de cette solution
+## 📦 Advantages of this solution
 
-✅ **Pas d'installation locale** - Tout est dans Docker  
-✅ **Portable** - Fonctionne sur Mac, Linux, Windows  
-✅ **Reproductible** - Même rendu partout  
-✅ **Isolation** - N'interfère pas avec votre système  
-✅ **Simple** - Un seul script à utiliser  
+✅ **No local installation** - Everything is in Docker  
+✅ **Portable** - Works on Mac, Linux, Windows  
+✅ **Reproducible** - Same output everywhere  
+✅ **Isolation** - Doesn't interfere with your system  
+✅ **Simple** - A single script to use  
 
-## 🆚 Comparaison avec installation locale
+## 🆚 Comparison with local installation
 
-| Critère | Docker | Installation locale |
+| Criterion | Docker | Local installation |
 |---------|--------|---------------------|
-| Installation | Simple (1 fichier) | Complexe (3+ outils) |
-| Espace disque | ~500 MB | ~2-4 GB |
-| Portabilité | Excellente | Dépend du système |
-| Mise à jour | Rebuild image | Mise à jour manuelle |
-| Performance | Légèrement plus lent | Plus rapide |
+| Installation | Simple (1 file) | Complex (3+ tools) |
+| Disk space | ~500 MB | ~2-4 GB |
+| Portability | Excellent | Depends on the system |
+| Update | Rebuild image | Manual update |
+| Performance | Slightly slower | Faster |
 
-## 🍺 Mettre à jour la formule Homebrew (contributeurs)
+## 🍺 Updating the Homebrew formula (contributors)
 
-Quand une nouvelle version est publiée :
+When a new version is released:
 
-1. **Créer un tag de release** sur le repo principal :
+1. **Create a release tag** on the main repo:
    ```bash
    git tag v1.x.x
    git push origin v1.x.x
    ```
 
-2. **Obtenir le SHA256** de l'archive :
+2. **Get the SHA256** of the archive:
    ```bash
    curl -sL https://github.com/pleymor/md2pdf/archive/refs/tags/v1.x.x.tar.gz | shasum -a 256
    ```
 
-3. **Mettre à jour la formule** dans `Formula/md2pdf.rb` :
-   - Modifier la ligne `url` avec le nouveau tag
-   - Mettre à jour le `sha256` avec le hash obtenu
+3. **Update the formula** in `Formula/md2pdf.rb`:
+   - Change the `url` line with the new tag
+   - Update the `sha256` with the obtained hash
 
-4. **Mettre à jour la version par défaut** du script d'installation dans `install.sh` (variable `VERSION`).
+4. **Update the default version** of the install script in `install.sh` (the `VERSION` variable).
 
-5. **Tester la formule** :
+5. **Test the formula**:
    ```bash
    brew install --build-from-source Formula/md2pdf.rb
    ```
 
-## 📄 Licence
+## 📄 License
 
-Libre d'utilisation et de modification
+Free to use and modify

@@ -1,177 +1,177 @@
-# Exemple de Document Markdown
+# Example Markdown Document
 
 ## Introduction
 
-Ce document démontre la conversion Markdown → PDF avec support des diagrammes Mermaid.
+This document demonstrates Markdown → PDF conversion with Mermaid diagram support.
 
 ---
 
-## Diagramme de flux
+## Flowchart
 
-Voici un exemple de diagramme de flux simple :
+Here is a simple flowchart example:
 
 ```mermaid
 graph TD
-    A[Fichier Markdown] --> B[Pandoc + Mermaid Filter]
+    A[Markdown File] --> B[Pandoc + Mermaid Filter]
     B --> C{LaTeX}
-    C -->|XeLaTeX| D[PDF de qualité]
-    D --> E[Document final]
+    C -->|XeLaTeX| D[High-quality PDF]
+    D --> E[Final Document]
 ```
 
-## Diagramme de séquence
+## Sequence Diagram
 
-Un exemple d'interaction entre utilisateur et système :
+An example of interaction between user and system:
 
 ```mermaid
 sequenceDiagram
-    participant U as Utilisateur
-    participant S as Système
-    participant D as Base de données
+    participant U as User
+    participant S as System
+    participant D as Database
     
-    U->>S: Demande de conversion
-    S->>D: Charger template
+    U->>S: Conversion request
+    S->>D: Load template
     D-->>S: Template
-    S->>S: Traiter Markdown
-    S->>S: Générer diagrammes
-    S-->>U: PDF généré
+    S->>S: Process Markdown
+    S->>S: Generate diagrams
+    S-->>U: Generated PDF
 ```
 
-## Diagramme de classes
+## Class Diagram
 
-Structure d'un système simple :
+Structure of a simple system:
 
 ```mermaid
 classDiagram
     class Document {
-        +String titre
-        +String contenu
-        +Date dateCreation
-        +convertirEnPDF()
+        +String title
+        +String content
+        +Date createdAt
+        +convertToPDF()
     }
     
-    class Convertisseur {
-        +String moteur
-        +convertir(Document)
+    class Converter {
+        +String engine
+        +convert(Document)
     }
     
     class PDF {
-        +byte[] contenu
-        +sauvegarder()
+        +byte[] content
+        +save()
     }
     
-    Document --> Convertisseur
-    Convertisseur --> PDF
+    Document --> Converter
+    Converter --> PDF
 ```
 
-## Fonctionnalités du texte
+## Text Features
 
-### Formatage de base
+### Basic Formatting
 
-- **Gras** et *italique*
-- ~~Barré~~
-- `Code inline`
-- [Liens](https://example.com)
+- **Bold** and *italic*
+- ~~Strikethrough~~
+- `Inline code`
+- [Links](https://example.com)
 
-### Listes
+### Lists
 
-1. Premier élément
-2. Deuxième élément
-   - Sous-élément A
-   - Sous-élément B
-3. Troisième élément
+1. First item
+2. Second item
+   - Sub-item A
+   - Sub-item B
+3. Third item
 
 ### Code
 
 ```python
-def convertir_markdown(fichier):
-    """Convertit un fichier Markdown en PDF"""
-    with open(fichier, 'r') as f:
-        contenu = f.read()
-    return generer_pdf(contenu)
+def convert_markdown(file):
+    """Convert a Markdown file to PDF"""
+    with open(file, 'r') as f:
+        content = f.read()
+    return generate_pdf(content)
 ```
 
-### Citations
+### Quotes
 
-> La simplicité est la sophistication suprême.
-> — Léonard de Vinci
+> Simplicity is the ultimate sophistication.
+> — Leonardo da Vinci
 
-### Tableau simple
+### Simple Table
 
-| Outil | Avantage | Inconvénient |
+| Tool | Advantage | Drawback |
 |-------|----------|--------------|
 | Pandoc | Flexible | Configuration |
-| Typora | Simple | Payant |
-| Docker | Portable | Espace disque |
+| Typora | Simple | Paid |
+| Docker | Portable | Disk space |
 
-### Tableau avec colonnes hétérogènes
+### Table with Heterogeneous Columns
 
-| ID | Nom | Description | Statut |
+| ID | Name | Description | Status |
 |----|-----|-------------|--------|
-| 1 | Pandoc | Convertisseur universel de documents supportant des dizaines de formats d'entrée et de sortie | Actif |
-| 2 | XeLaTeX | Moteur LaTeX avec support natif Unicode et polices système OpenType/TrueType | Actif |
-| 3 | Mermaid | Outil de génération de diagrammes à partir de texte, intégré dans de nombreuses plateformes | Beta |
+| 1 | Pandoc | Universal document converter supporting dozens of input and output formats | Active |
+| 2 | XeLaTeX | LaTeX engine with native Unicode support and OpenType/TrueType system fonts | Active |
+| 3 | Mermaid | Tool for generating diagrams from text, integrated into many platforms | Beta |
 
-### Tableau avec beaucoup de colonnes
+### Table with Many Columns
 
-| Langue | Typage | Paradigme | Perf. | Écosystème | Courbe |
+| Language | Typing | Paradigm | Perf. | Ecosystem | Curve |
 |--------|--------|-----------|-------|------------|--------|
-| Python | Dynamique | Multi | Moyenne | Très riche | Douce |
-| Rust | Statique | Système | Haute | Croissant | Raide |
-| Go | Statique | Concurrent | Haute | Solide | Douce |
-| JS | Dynamique | Event-driven | Moyenne | Immense | Moyenne |
+| Python | Dynamic | Multi | Medium | Very rich | Gentle |
+| Rust | Static | Systems | High | Growing | Steep |
+| Go | Static | Concurrent | High | Solid | Gentle |
+| JS | Dynamic | Event-driven | Medium | Huge | Medium |
 
-### Tableau avec contenu non homogène
+### Table with Non-uniform Content
 
-| Composant | Entrée | Traitement | Sortie |
+| Component | Input | Processing | Output |
 |-----------|--------|------------|--------|
-| Parser Markdown | Fichier `.md` brut avec métadonnées YAML, liens, images et blocs de code imbriqués | Analyse syntaxique | AST |
-| Mermaid Filter | AST | Détection des blocs mermaid, lancement de Chromium headless pour le rendu SVG/PDF de chaque diagramme, puis réinjection dans le document | Diagrammes rendus |
-| Moteur LaTeX | AST enrichi | Compilation | PDF |
-| Post-traitement | PDF brut | Vérification des liens internes, numérotation des pages, génération de la table des matières et ajout des métadonnées XMP au fichier final | PDF finalisé |
+| Markdown Parser | Raw `.md` file with YAML metadata, links, images and nested code blocks | Syntax analysis | AST |
+| Mermaid Filter | AST | Detection of mermaid blocks, launching headless Chromium to render each diagram as SVG/PDF, then reinjecting into the document | Rendered diagrams |
+| LaTeX Engine | Enriched AST | Compilation | PDF |
+| Post-processing | Raw PDF | Verifying internal links, page numbering, generating the table of contents and adding XMP metadata to the final file | Finalized PDF |
 
-## Diagramme Gantt
+## Gantt Diagram
 
-Planning d'un projet :
+Project schedule:
 
 ```mermaid
 gantt
-    title Planning de projet
+    title Project Schedule
     dateFormat YYYY-MM-DD
     section Phase 1
-    Analyse       :a1, 2024-01-01, 30d
-    Conception    :a2, after a1, 20d
+    Analysis      :a1, 2024-01-01, 30d
+    Design        :a2, after a1, 20d
     section Phase 2
-    Développement :a3, after a2, 45d
+    Development   :a3, after a2, 45d
     Tests         :a4, after a3, 15d
     section Phase 3
-    Déploiement   :after a4, 10d
+    Deployment    :after a4, 10d
 ```
 
-## Diagramme circulaire
+## Pie Chart
 
-Répartition du temps :
+Time distribution:
 
 ```mermaid
-pie title Répartition du temps
-    "Développement" : 45
+pie title Time Distribution
+    "Development" : 45
     "Tests" : 20
     "Documentation" : 15
-    "Réunions" : 20
+    "Meetings" : 20
 ```
 
 ## Conclusion
 
-Ce document démontre les capacités de conversion avec :
+This document demonstrates conversion capabilities with:
 
-- ✅ Diagrammes Mermaid variés
-- ✅ Formatage Markdown complet
-- ✅ Tableaux et listes
-- ✅ Code et citations
-- ✅ Support Unicode (français, émojis)
+- ✅ Various Mermaid diagrams
+- ✅ Complete Markdown formatting
+- ✅ Tables and lists
+- ✅ Code and quotes
+- ✅ Unicode support (accents, emojis)
 
-Le rendu PDF devrait être propre et professionnel ! 🎉
+The PDF output should be clean and professional! 🎉
 
-## Informations, Warnings et Erreurs
+## Notes, Warnings and Errors
 
 > [!NOTE]  
 > Highlights information that users should take into account, even when skimming.
@@ -187,4 +187,3 @@ Le rendu PDF devrait être propre et professionnel ! 🎉
 
 > [!CAUTION]
 > Negative potential consequences of an action.
-
