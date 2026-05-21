@@ -70,10 +70,11 @@ fi
 
 # Engine-specific run flags. Rootless Podman maps the container user into the
 # host subuid range, so the bind-mounted /data is not writable by the in-image
-# 'converter' user; --userns=keep-id maps the invoking user 1:1 to fix that.
+# 'converter' user. The node:24-slim base already claims UID 1000, so 'converter'
+# is UID/GID 1001; keep-id must target that so the invoking user maps onto it.
 ENGINE_RUN_FLAGS=()
 if [ "$(basename "$CONTAINER_ENGINE")" = "podman" ]; then
-    ENGINE_RUN_FLAGS+=(--userns=keep-id)
+    ENGINE_RUN_FLAGS+=("--userns=keep-id:uid=1001,gid=1001")
 fi
 
 # Parse arguments
