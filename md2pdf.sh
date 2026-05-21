@@ -44,10 +44,36 @@ usage() {
     exit 1
 }
 
-# Check if Docker is running
-if ! docker info > /dev/null 2>&1; then
-    echo -e "${RED}Error: Docker is not running${NC}"
+# Resolve container engine (override via MD2PDF_CONTAINER_ENGINE)
+CONTAINER_ENGINE=""
+if [ -n "$MD2PDF_CONTAINER_ENGINE" ]; then
+    if command -v "$MD2PDF_CONTAINER_ENGINE" > /dev/null 2>&1 \
+       && "$MD2PDF_CONTAINER_ENGINE" info > /dev/null 2>&1; then
+        CONTAINER_ENGINE="$MD2PDF_CONTAINER_ENGINE"
+    else
+        echo -e "${RED}Error: MD2PDF_CONTAINER_ENGINE='$MD2PDF_CONTAINER_ENGINE' is not available or not running${NC}"
+        exit 1
+    fi
+else
+    for engine in docker podman; do
+        if command -v "$engine" > /dev/null 2>&1 && "$engine" info > /dev/null 2>&1; then
+            CONTAINER_ENGINE="$engine"
+            break
+        fi
+    done
+fi
+
+if [ -z "$CONTAINER_ENGINE" ]; then
+    echo -e "${RED}Error: No working container engine found. Install and start Docker or Podman (or set MD2PDF_CONTAINER_ENGINE).${NC}"
     exit 1
+fi
+
+# Engine-specific run flags. Rootless Podman maps the container user into the
+# host subuid range, so the bind-mounted /data is not writable by the in-image
+# 'converter' user; --userns=keep-id maps the invoking user 1:1 to fix that.
+ENGINE_RUN_FLAGS=()
+if [ "$(basename "$CONTAINER_ENGINE")" = "podman" ]; then
+    ENGINE_RUN_FLAGS+=(--userns=keep-id)
 fi
 
 # Parse arguments
@@ -134,9 +160,9 @@ TEMP_OUTPUT_FILE=".tmp_${OUTPUT_FILE}"
 
 echo -e "${GREEN}Converting $INPUT to $OUTPUT_PATH...${NC}"
 
-# Build Docker image
-echo -e "${GREEN}Building Docker image...${NC}"
-docker build -t md2pdf "$RESOURCE_DIR"
+# Build container image
+echo -e "${GREEN}Building image with $CONTAINER_ENGINE...${NC}"
+"$CONTAINER_ENGINE" build -t md2pdf "$RESOURCE_DIR"
 
 # Build title page header with LaTeX definitions (for logo override)
 TITLEPAGE_HEADER=""
@@ -175,7 +201,8 @@ if [ -n "$LOGO" ] || [ -n "$AUTHOR" ] || [ -n "$DATE" ]; then
 fi
 
 # Run conversion
-docker run --rm \
+"$CONTAINER_ENGINE" run --rm \
+    "${ENGINE_RUN_FLAGS[@]}" \
     -v "$INPUT_DIR:/data" \
     --security-opt seccomp=unconfined \
     -e MERMAID_FILTER_WIDTH=1200 \
