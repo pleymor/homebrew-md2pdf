@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint & static checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ShellCheck md2pdf.sh
+        # SC2034: --margin/--font are parsed but not yet wired into pandoc
+        #         (pre-existing; tracked separately).
+        # SC2028: echo intentionally writes literal LaTeX backslashes (no -e).
+        run: shellcheck -e SC2034,SC2028 md2pdf.sh
+
+      - name: Bash syntax check
+        run: bash -n md2pdf.sh
+
+      - name: Help smoke test
+        run: ./md2pdf.sh --help | grep -q "Usage:"
+
+      - name: Formula syntax check
+        run: ruby -c Formula/md2pdf.rb
+
+  e2e:
+    name: E2E (${{ matrix.engine }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [docker, podman]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Podman
+        if: matrix.engine == 'podman'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Convert example.md to PDF
+        env:
+          MD2PDF_CONTAINER_ENGINE: ${{ matrix.engine }}
+        run: ./md2pdf.sh example.md
+
+      - name: Assert PDF was created
+        run: |
+          test -s example.pdf
+          file example.pdf | grep -q PDF
