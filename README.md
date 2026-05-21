@@ -1,6 +1,6 @@
 # Markdown to PDF Converter with Mermaid Support
 
-Convertisseur Markdown → PDF avec support natif des diagrammes Mermaid, encapsulé dans Docker pour une utilisation simple.
+Convertisseur Markdown → PDF avec support natif des diagrammes Mermaid, encapsulé dans un conteneur (Docker ou Podman) pour une utilisation simple.
 
 ## 🚀 Installation
 
@@ -163,13 +163,24 @@ Puis reconstruire :
 docker build -t md2pdf .
 ```
 
+## 🐳 Docker ou Podman
+
+md2pdf fonctionne avec **Docker** ou **Podman**. Le moteur est détecté
+automatiquement (Docker prioritaire, puis Podman). Pour forcer un moteur
+particulier, définissez la variable d'environnement `MD2PDF_CONTAINER_ENGINE` :
+
+```bash
+MD2PDF_CONTAINER_ENGINE=podman ./md2pdf.sh document.md
+```
+
 ## 🔧 Dépannage
 
-### Docker n'est pas démarré
+### Aucun moteur de conteneur disponible
 ```
-Error: Docker is not running
+Error: No working container engine found.
 ```
-→ Lancez Docker Desktop
+→ Installez et démarrez Docker (Docker Desktop) ou Podman, ou définissez
+`MD2PDF_CONTAINER_ENGINE`.
 
 ### Problème de permissions
 ```bash
@@ -180,7 +191,7 @@ sudo usermod -aG docker $USER
 
 ### Rebuild de l'image
 ```bash
-docker rmi md2pdf
+docker rmi md2pdf   # ou: podman rmi md2pdf
 ./md2pdf.sh document.md  # Reconstruira automatiquement
 ```
 
