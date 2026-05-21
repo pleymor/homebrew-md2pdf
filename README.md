@@ -11,6 +11,20 @@ brew tap pleymor/md2pdf
 brew install md2pdf
 ```
 
+### Via script d'installation (curl)
+
+Pour les systèmes sans Homebrew (Linux), une seule commande suffit (Docker ou Podman requis) :
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/pleymor/homebrew-md2pdf/main/install.sh | bash
+```
+
+Le script installe les fichiers dans `~/.local/share/md2pdf` et crée un lien symbolique `md2pdf` dans `~/.local/bin`. Pour épingler une version, utilisez la variable `MD2PDF_VERSION` :
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/pleymor/homebrew-md2pdf/main/install.sh | MD2PDF_VERSION=v1.2.0 bash
+```
+
 ### Installation manuelle
 
 ```bash
@@ -243,7 +257,9 @@ Quand une nouvelle version est publiée :
    - Modifier la ligne `url` avec le nouveau tag
    - Mettre à jour le `sha256` avec le hash obtenu
 
-4. **Tester la formule** :
+4. **Mettre à jour la version par défaut** du script d'installation dans `install.sh` (variable `VERSION`).
+
+5. **Tester la formule** :
    ```bash
    brew install --build-from-source Formula/md2pdf.rb
    ```
