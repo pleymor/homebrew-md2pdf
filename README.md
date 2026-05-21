@@ -238,31 +238,23 @@ docker rmi md2pdf   # or: podman rmi md2pdf
 | Update | Rebuild image | Manual update |
 | Performance | Slightly slower | Faster |
 
-## 🍺 Updating the Homebrew formula (contributors)
+## 🍺 Publishing a new version (contributors)
 
-When a new version is released:
+Releases are automated by the **Release** workflow (`.github/workflows/release.yml`).
 
-1. **Create a release tag** on the main repo:
-   ```bash
-   git tag v1.x.x
-   git push origin v1.x.x
-   ```
+1. From the GitHub **Actions** tab, run the **Release** workflow (`Run workflow`).
+2. Enter the target version, e.g. `1.3.0` (a leading `v` is tolerated). Tick `dry_run`
+   to validate and inspect the diff without publishing anything.
 
-2. **Get the SHA256** of the archive:
-   ```bash
-   curl -sL https://github.com/pleymor/md2pdf/archive/refs/tags/v1.x.x.tar.gz | shasum -a 256
-   ```
+The workflow creates and pushes the tag, computes the archive `sha256`, updates
+`Formula/md2pdf.rb` / `install.sh` / `README.md`, commits the bump to `main`, and creates
+the GitHub Release with auto-generated notes.
 
-3. **Update the formula** in `Formula/md2pdf.rb`:
-   - Change the `url` line with the new tag
-   - Update the `sha256` with the obtained hash
+To test the formula locally:
 
-4. **Update the default version** of the install script in `install.sh` (the `VERSION` variable).
-
-5. **Test the formula**:
-   ```bash
-   brew install --build-from-source Formula/md2pdf.rb
-   ```
+```bash
+brew install --build-from-source Formula/md2pdf.rb
+```
 
 ## 📄 License
 
