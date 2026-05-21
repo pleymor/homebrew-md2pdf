@@ -22,7 +22,7 @@ curl -fsSL https://raw.githubusercontent.com/pleymor/homebrew-md2pdf/main/instal
 The script installs the files into `~/.local/share/md2pdf` and creates a `md2pdf` symlink in `~/.local/bin`. To pin a version, use the `MD2PDF_VERSION` variable:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pleymor/homebrew-md2pdf/main/install.sh | MD2PDF_VERSION=v1.2.0 bash
+curl -fsSL https://raw.githubusercontent.com/pleymor/homebrew-md2pdf/main/install.sh | MD2PDF_VERSION=v1.3.0 bash
 ```
 
 ### Manual installation
