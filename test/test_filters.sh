@@ -47,4 +47,15 @@ check "alerts: docx keeps content" grep -q 'Useful information.' <<< "$alerts_xm
 alerts_tex=$(run_pandoc_text /data/alerts.md -t latex --lua-filter /filters/alerts.lua)
 check "alerts: latex still uses tcolorbox" grep -q 'tcolorbox' <<< "$alerts_tex"
 
+# --- table-autofit.lua ---
+run_pandoc table.docx /data/table.md --lua-filter /filters/table-autofit.lua
+widths=$(docxml table.docx | grep -o '<w:gridCol w:w="[0-9]*"' | grep -o '[0-9][0-9]*')
+w1=$(echo "$widths" | sed -n 1p)
+w2=$(echo "$widths" | sed -n 2p)
+check "table: docx has two column widths" test -n "$w1" -a -n "$w2"
+check "table: long column wider than short" test "${w2:-0}" -gt "${w1:-0}"
+
+table_tex=$(run_pandoc_text /data/table.md -t latex --lua-filter /filters/table-autofit.lua)
+check "table: latex still emits longtable" grep -q 'longtable' <<< "$table_tex"
+
 finish

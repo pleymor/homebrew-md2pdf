@@ -33,19 +33,14 @@ local function align_prefix(align)
   end
 end
 
---- Builds a LaTeX column spec with all columns proportional to content,
---- guaranteeing the total fits exactly within \textwidth.
+--- Computes proportional column widths that sum to `available`.
+--- Applies sqrt-dampening and a minimum width per column.
 --- @param max_lengths table Max content lengths per column
---- @param aligns table Pandoc alignment per column
 --- @param num_cols number Number of columns
---- @return string LaTeX column specification
-local function build_colspec(max_lengths, aligns, num_cols)
+--- @param available number Total width budget (fraction of text width)
+--- @return table List of widths per column
+local function compute_widths(max_lengths, num_cols, available)
   local min_width = 0.06
-  -- Reserve space for inter-column padding: 2 * \tabcolsep (6pt) per column
-  -- With \textwidth ~ 455pt (letter, 0.75in margins), 12pt/455pt ≈ 0.026
-  local padding_per_col = 0.026
-  local available = 1.0 - (num_cols * padding_per_col)
-  if available < 0.3 then available = 0.3 end
 
   -- Apply a sqrt-dampening so very long columns don't completely crush short ones
   local weights = {}
@@ -83,6 +78,15 @@ local function build_colspec(max_lengths, aligns, num_cols)
     end
   end
 
+  return widths
+end
+
+--- Builds a LaTeX column spec from precomputed widths.
+--- @param widths table Width per column (fractions of \textwidth)
+--- @param aligns table Pandoc alignment per column
+--- @param num_cols number Number of columns
+--- @return string LaTeX column specification
+local function build_colspec(widths, aligns, num_cols)
   local specs = {}
   for i = 1, num_cols do
     local a = align_prefix(aligns[i])
@@ -172,8 +176,25 @@ function Table(tbl)
     end
   end
 
+  -- For docx, set proportional widths on the AST; the writer honors colspecs
+  if FORMAT == "docx" then
+    local widths = compute_widths(max_lengths, num_cols, 1.0)
+    local new_colspecs = {}
+    for i = 1, num_cols do
+      new_colspecs[i] = { aligns[i], widths[i] }
+    end
+    tbl.colspecs = new_colspecs
+    return tbl
+  end
+
   -- Build LaTeX
-  local colspec = build_colspec(max_lengths, aligns, num_cols)
+  -- Reserve space for inter-column padding: 2 * \tabcolsep (6pt) per column
+  -- With \textwidth ~ 455pt (letter, 0.75in margins), 12pt/455pt ≈ 0.026
+  local padding_per_col = 0.026
+  local available = 1.0 - (num_cols * padding_per_col)
+  if available < 0.3 then available = 0.3 end
+  local widths = compute_widths(max_lengths, num_cols, available)
+  local colspec = build_colspec(widths, aligns, num_cols)
   local lines = {}
 
   lines[#lines + 1] = string.format("\\begin{longtable}[]{@{}%s@{}}", colspec)
