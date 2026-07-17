@@ -34,48 +34,17 @@ usage() {
     echo "                         Options: default, forest, dark, neutral"
     echo "  --author AUTHOR        Set document author"
     echo "  --date DATE            Set document date"
+    echo "  -w, --word             Output Word (.docx) instead of PDF"
     echo "  -h, --help             Show this help message"
     echo ""
     echo "Examples:"
     echo "  ./md2pdf.sh document.md"
     echo "  ./md2pdf.sh document.md output.pdf"
+    echo "  ./md2pdf.sh document.md --word"
     echo "  ./md2pdf.sh document.md --logo logo.png --author 'John Doe'"
     echo "  ./md2pdf.sh document.md --theme dark"
     exit 1
 }
-
-# Resolve container engine (override via MD2PDF_CONTAINER_ENGINE)
-CONTAINER_ENGINE=""
-if [ -n "$MD2PDF_CONTAINER_ENGINE" ]; then
-    if command -v "$MD2PDF_CONTAINER_ENGINE" > /dev/null 2>&1 \
-       && "$MD2PDF_CONTAINER_ENGINE" info > /dev/null 2>&1; then
-        CONTAINER_ENGINE="$MD2PDF_CONTAINER_ENGINE"
-    else
-        echo -e "${RED}Error: MD2PDF_CONTAINER_ENGINE='$MD2PDF_CONTAINER_ENGINE' is not available or not running${NC}"
-        exit 1
-    fi
-else
-    for engine in docker podman; do
-        if command -v "$engine" > /dev/null 2>&1 && "$engine" info > /dev/null 2>&1; then
-            CONTAINER_ENGINE="$engine"
-            break
-        fi
-    done
-fi
-
-if [ -z "$CONTAINER_ENGINE" ]; then
-    echo -e "${RED}Error: No working container engine found. Install and start Docker or Podman (or set MD2PDF_CONTAINER_ENGINE).${NC}"
-    exit 1
-fi
-
-# Engine-specific run flags. Rootless Podman maps the container user into the
-# host subuid range, so the bind-mounted /data is not writable by the in-image
-# 'converter' user. The node:24-slim base already claims UID 1000, so 'converter'
-# is UID/GID 1001; keep-id must target that so the invoking user maps onto it.
-ENGINE_RUN_FLAGS=()
-if [ "$(basename "$CONTAINER_ENGINE")" = "podman" ]; then
-    ENGINE_RUN_FLAGS+=("--userns=keep-id:uid=1001,gid=1001")
-fi
 
 # Parse arguments
 INPUT=""
@@ -86,6 +55,7 @@ LOGO=""
 AUTHOR=""
 DATE=""
 THEME="neutral"
+WORD=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -116,6 +86,10 @@ while [[ $# -gt 0 ]]; do
             THEME="$2"
             shift 2
             ;;
+        -w|--word)
+            WORD=true
+            shift
+            ;;
         *)
             if [ -z "$INPUT" ]; then
                 INPUT="$1"
@@ -138,9 +112,22 @@ if [ ! -f "$INPUT" ]; then
     exit 1
 fi
 
+# Resolve output format
+FORMAT="pdf"
+if [ "$WORD" = true ]; then
+    FORMAT="docx"
+fi
+if [[ "$OUTPUT" == *.docx ]]; then
+    FORMAT="docx"
+fi
+if [ "$WORD" = true ] && [[ "$OUTPUT" == *.pdf ]]; then
+    echo -e "${RED}Error: --word conflicts with .pdf output filename '$OUTPUT'${NC}"
+    exit 1
+fi
+
 # Set output filename
 if [ -z "$OUTPUT" ]; then
-    OUTPUT="${INPUT%.md}.pdf"
+    OUTPUT="${INPUT%.md}.${FORMAT}"
 fi
 
 # Get absolute paths
@@ -160,6 +147,39 @@ OUTPUT_PATH="$OUTPUT_DIR/$OUTPUT_FILE"
 TEMP_OUTPUT_FILE=".tmp_${OUTPUT_FILE}"
 
 echo -e "${GREEN}Converting $INPUT to $OUTPUT_PATH...${NC}"
+
+# Resolve container engine (override via MD2PDF_CONTAINER_ENGINE)
+CONTAINER_ENGINE=""
+if [ -n "${MD2PDF_CONTAINER_ENGINE:-}" ]; then
+    if command -v "$MD2PDF_CONTAINER_ENGINE" > /dev/null 2>&1 \
+       && "$MD2PDF_CONTAINER_ENGINE" info > /dev/null 2>&1; then
+        CONTAINER_ENGINE="$MD2PDF_CONTAINER_ENGINE"
+    else
+        echo -e "${RED}Error: MD2PDF_CONTAINER_ENGINE='$MD2PDF_CONTAINER_ENGINE' is not available or not running${NC}"
+        exit 1
+    fi
+else
+    for engine in docker podman; do
+        if command -v "$engine" > /dev/null 2>&1 && "$engine" info > /dev/null 2>&1; then
+            CONTAINER_ENGINE="$engine"
+            break
+        fi
+    done
+fi
+
+if [ -z "$CONTAINER_ENGINE" ]; then
+    echo -e "${RED}Error: No working container engine found. Install and start Docker or Podman (or set MD2PDF_CONTAINER_ENGINE).${NC}"
+    exit 1
+fi
+
+# Engine-specific run flags. Rootless Podman maps the container user into the
+# host subuid range, so the bind-mounted /data is not writable by the in-image
+# 'converter' user. The node:24-slim base already claims UID 1000, so 'converter'
+# is UID/GID 1001; keep-id must target that so the invoking user maps onto it.
+ENGINE_RUN_FLAGS=()
+if [ "$(basename "$CONTAINER_ENGINE")" = "podman" ]; then
+    ENGINE_RUN_FLAGS+=("--userns=keep-id:uid=1001,gid=1001")
+fi
 
 # Build container image
 echo -e "${GREEN}Building image with $CONTAINER_ENGINE...${NC}"
@@ -243,7 +263,8 @@ fi
 if [ $CONVERSION_RESULT -eq 0 ]; then
     # Move temp file to final destination
     mv "$INPUT_DIR/$TEMP_OUTPUT_FILE" "$OUTPUT_PATH"
-    echo -e "${GREEN}✓ PDF created successfully: $OUTPUT_PATH${NC}"
+    FORMAT_LABEL=$(echo "$FORMAT" | tr '[:lower:]' '[:upper:]')
+    echo -e "${GREEN}✓ ${FORMAT_LABEL} created successfully: $OUTPUT_PATH${NC}"
 else
     # Clean up temp file on failure
     rm -f "$INPUT_DIR/$TEMP_OUTPUT_FILE"

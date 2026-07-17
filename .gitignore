@@ -2,3 +2,4 @@
 *.pdf
 core
 mermaid-filter.err
+test/tmp/
