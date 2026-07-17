@@ -2,6 +2,9 @@
 -- This works by injecting raw LaTeX after pandoc generates the TOC
 
 function Pandoc(doc)
+  if FORMAT ~= "latex" then
+    return doc
+  end
   -- Insert a raw LaTeX pagebreak at the beginning of the document body
   -- This will appear right after the TOC since pandoc places TOC before body
   local pagebreak = pandoc.RawBlock('latex', '\\newpage')

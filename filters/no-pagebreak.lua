@@ -5,6 +5,9 @@
 ]]
 
 function RawBlock(el)
+  if FORMAT == "docx" then
+    return el
+  end
   if el.format == "latex" then
     -- Remove standalone page break commands
     local content = el.text
