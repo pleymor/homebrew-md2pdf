@@ -70,4 +70,40 @@ check "cover: title styled" grep -q 'w:val="Title"' <<< "$cover_xml"
 check "cover: logo embedded" bash -c "unzip -l test/tmp/cover.docx | grep -q 'word/media/'"
 check "cover: page break after cover" grep -q '<w:br w:type="page"/>' <<< "$cover_xml"
 
+# --- image-fit.lua ---
+python3 - <<'EOF'
+import struct, zlib
+
+def png(path, w, h):
+    def chunk(typ, data):
+        c = typ + data
+        return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c) & 0xffffffff)
+    ihdr = struct.pack(">IIBBBBB", w, h, 8, 0, 0, 0, 0)  # 8-bit grayscale
+    raw = b"".join(b"\x00" + b"\x80" * w for _ in range(h))
+    idat = zlib.compress(raw)
+    with open(path, "wb") as f:
+        f.write(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", idat) + chunk(b"IEND", b""))
+
+png("test/tmp/tall.png", 200, 4000)
+png("test/tmp/small.png", 100, 100)
+EOF
+printf '![](/out/tall.png)\n\n![](/out/small.png)\n' > test/tmp/images.md
+run_pandoc images.docx /out/images.md --lua-filter /filters/image-fit.lua
+cys=$(docxml images.docx | grep -o 'cy="[0-9]*"' | grep -o '[0-9]*')
+tall_cy=$(echo "$cys" | sed -n 1p)
+small_cy=$(echo "$cys" | sed -n '$p')
+check "image-fit: tall image capped to max height" \
+  test "${tall_cy:-99999999}" -ge 6300000 -a "${tall_cy:-99999999}" -le 6500000
+# 100px at the writer's 72 dpi = 1270000 EMU
+check "image-fit: small image untouched" \
+  test "${small_cy:-0}" -ge 1200000 -a "${small_cy:-0}" -le 1300000
+
+# mermaid-filter embeds diagrams as data URIs, not files
+b64=$(base64 < test/tmp/tall.png | tr -d '\n')
+printf '![](data:image/png;base64,%s)\n' "$b64" > test/tmp/datauri.md
+run_pandoc datauri.docx /out/datauri.md --lua-filter /filters/image-fit.lua
+datauri_cy=$(docxml datauri.docx | grep -o 'cy="[0-9]*"' | grep -o '[0-9]*' | sed -n 1p)
+check "image-fit: data-URI image capped to max height" \
+  test "${datauri_cy:-99999999}" -ge 6300000 -a "${datauri_cy:-99999999}" -le 6500000
+
 finish

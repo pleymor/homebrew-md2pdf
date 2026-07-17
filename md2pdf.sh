@@ -306,6 +306,7 @@ if [ "$FORMAT" = "docx" ]; then
         -o "/data/$TEMP_OUTPUT_FILE" \
         --number-sections \
         --filter mermaid-filter \
+        --lua-filter /filters/image-fit.lua \
         --lua-filter /filters/no-pagebreak.lua \
         --lua-filter /filters/alerts.lua \
         --lua-filter /filters/horizontal-rule.lua \
