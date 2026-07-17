@@ -58,4 +58,16 @@ check "table: long column wider than short" test "${w2:-0}" -gt "${w1:-0}"
 table_tex=$(run_pandoc_text /data/table.md -t latex --lua-filter /filters/table-autofit.lua)
 check "table: latex still emits longtable" grep -q 'longtable' <<< "$table_tex"
 
+# --- titlepage-docx.lua ---
+run_pandoc cover.docx /data/cover.md \
+  --shift-heading-level-by=-1 \
+  -M author="Jane Doe" -M date="2026-07-17" -M titlelogo=/data/logo.png \
+  --lua-filter /filters/titlepage-docx.lua
+cover_xml=$(docxml cover.docx)
+check "cover: TOC field present" grep -q 'TOC .o "1-3"' <<< "$cover_xml"
+check "cover: author present" grep -q 'Jane Doe' <<< "$cover_xml"
+check "cover: title styled" grep -q 'w:val="Title"' <<< "$cover_xml"
+check "cover: logo embedded" bash -c "unzip -l test/tmp/cover.docx | grep -q 'word/media/'"
+check "cover: page break after cover" grep -q '<w:br w:type="page"/>' <<< "$cover_xml"
+
 finish
