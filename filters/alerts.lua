@@ -1,7 +1,8 @@
 --[[
   Pandoc Lua filter for GitHub-style alerts/admonitions
   Converts > [!NOTE], > [!TIP], > [!IMPORTANT], > [!WARNING], > [!CAUTION]
-  to styled LaTeX boxes using tcolorbox
+  to styled LaTeX boxes using tcolorbox, or to paragraphs carrying the
+  Alert* styles from templates/reference.docx in docx output
 ]]
 
 local alert_types = {
@@ -85,6 +86,15 @@ function BlockQuote(el)
 
   for i = 2, #el.content do
     new_content:insert(el.content[i])
+  end
+
+  if FORMAT == "docx" then
+    local blocks = pandoc.List()
+    blocks:insert(pandoc.Para(pandoc.Strong(pandoc.Str(config.title))))
+    for _, block in ipairs(new_content) do
+      blocks:insert(block)
+    end
+    return pandoc.Div(blocks, pandoc.Attr("", {}, { ["custom-style"] = "Alert" .. config.title }))
   end
 
   -- Create LaTeX box

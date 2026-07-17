@@ -37,4 +37,14 @@ check "hr: docx gets a page break" grep -q '<w:br w:type="page"/>' <<< "$(docxml
 hr_tex=$(run_pandoc_text /data/hr.md -t latex --lua-filter /filters/horizontal-rule.lua)
 check "hr: latex still gets newpage" grep -q '\\newpage' <<< "$hr_tex"
 
+# --- alerts.lua ---
+run_pandoc alerts.docx /data/alerts.md --lua-filter /filters/alerts.lua
+alerts_xml=$(docxml alerts.docx)
+check "alerts: docx NOTE style applied" grep -q 'w:val="AlertNote"' <<< "$alerts_xml"
+check "alerts: docx WARNING style applied" grep -q 'w:val="AlertWarning"' <<< "$alerts_xml"
+check "alerts: docx keeps content" grep -q 'Useful information.' <<< "$alerts_xml"
+
+alerts_tex=$(run_pandoc_text /data/alerts.md -t latex --lua-filter /filters/alerts.lua)
+check "alerts: latex still uses tcolorbox" grep -q 'tcolorbox' <<< "$alerts_tex"
+
 finish
