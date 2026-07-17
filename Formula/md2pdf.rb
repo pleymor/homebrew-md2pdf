@@ -20,6 +20,7 @@ class Md2pdf < Formula
       Usage:
         md2pdf document.md
         md2pdf document.md --logo logo.png
+        md2pdf document.md --word
     EOS
   end
 

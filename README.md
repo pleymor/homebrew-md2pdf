@@ -1,6 +1,6 @@
 # Markdown to PDF Converter with Mermaid Support
 
-Markdown → PDF converter with native Mermaid diagram support, packaged in a container (Docker or Podman) for simple usage.
+Markdown → PDF (or Word) converter with native Mermaid diagram support, packaged in a container (Docker or Podman) for simple usage.
 
 ## 🚀 Installation
 
@@ -51,6 +51,12 @@ chmod +x md2pdf.sh
 ./md2pdf.sh input.md output.pdf
 ```
 
+### Word output
+```bash
+./md2pdf.sh document.md --word        # Creates document.docx
+./md2pdf.sh document.md report.docx   # The .docx extension implies Word output
+```
+
 ### Available options
 
 All options are optional.
@@ -62,6 +68,7 @@ All options are optional.
 | `--logo FILE` | Logo for the title page | none |
 | `--author AUTHOR` | Document author | none |
 | `--date DATE` | Document date | today's date |
+| `-w, --word` | Output Word (.docx) instead of PDF | off |
 | `-h, --help` | Show help | - |
 
 > [!NOTE]
@@ -81,6 +88,9 @@ All options are optional.
 
 # Combine options
 ./md2pdf.sh document.md output.pdf --margin 2cm
+
+# Word output with a cover page
+./md2pdf.sh document.md --word --logo logo.png --author "John Doe"
 ```
 
 ## ✨ Features
@@ -117,6 +127,16 @@ Mermaid diagrams are automatically converted to vector images (PDF) with the "fo
 ### Emoji support
 
 Unicode emojis are supported in the document.
+
+### Word (.docx) output
+
+With `--word` (or a `.docx` output filename), the document is converted to Word instead of PDF, with the same features:
+
+- **Cover page** built from `--logo`, `--author` and `--date` (centered logo, title, author, date).
+- **Table of contents** inserted as a native Word field: open the document, select all (`Ctrl`/`Cmd`+`A`) and press `F9` to populate it. It stays clickable and refreshable.
+- **Mermaid diagrams** rendered as high-resolution PNG images.
+- **GitHub alerts** styled as colored boxes, **`---` page breaks** and **auto-fit tables** work like in PDF.
+- `--font` and `--margin` are applied to the document styles. Styling comes from `templates/reference.docx` (regenerate it with `scripts/build-reference-docx.sh` after customizations).
 
 ## 📖 Example Markdown file
 
