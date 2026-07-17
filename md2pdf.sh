@@ -22,6 +22,49 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+# Converts a margin like 2.5cm / 25mm / 1in to twips (empty if unsupported).
+margin_to_twips() {
+    local margin="$1"
+    case "$margin" in
+        *cm) awk "BEGIN {printf \"%d\", ${margin%cm} * 567}" ;;
+        *mm) awk "BEGIN {printf \"%d\", ${margin%mm} * 56.7}" ;;
+        *in) awk "BEGIN {printf \"%d\", ${margin%in} * 1440}" ;;
+        *) echo "" ;;
+    esac
+}
+
+# Copies the reference docx to $2 with font/margin overrides patched in.
+patch_reference_docx() {
+    local src="$1" dest="$2" font="$3" margin="$4"
+    local workdir
+    workdir=$(mktemp -d)
+    unzip -q "$src" -d "$workdir"
+
+    if [ "$font" != "DejaVu Sans" ]; then
+        sed -i.bak "s/DejaVu Sans/$font/g" "$workdir/word/styles.xml"
+        rm -f "$workdir/word/styles.xml.bak"
+        if [ -f "$workdir/word/theme/theme1.xml" ]; then
+            sed -i.bak "s/DejaVu Sans/$font/g" "$workdir/word/theme/theme1.xml"
+            rm -f "$workdir/word/theme/theme1.xml.bak"
+        fi
+    fi
+
+    if [ "$margin" != "2.5cm" ]; then
+        local twips
+        twips=$(margin_to_twips "$margin")
+        if [ -n "$twips" ]; then
+            sed -i.bak -E "s|<w:pgMar[^/]*/>|<w:pgMar w:top=\"$twips\" w:right=\"$twips\" w:bottom=\"$twips\" w:left=\"$twips\" w:header=\"720\" w:footer=\"720\" w:gutter=\"0\"/>|" "$workdir/word/document.xml"
+            rm -f "$workdir/word/document.xml.bak"
+        else
+            echo -e "${RED}Warning: unsupported margin unit '$margin' for Word output, keeping defaults${NC}"
+        fi
+    fi
+
+    rm -f "$dest"
+    (cd "$workdir" && zip -q -r -X "$dest" .)
+    rm -rf "$workdir"
+}
+
 # Function to show usage
 usage() {
     echo "Usage: ./md2pdf.sh input.md [output.pdf] [options]"
@@ -185,28 +228,32 @@ fi
 echo -e "${GREEN}Building image with $CONTAINER_ENGINE...${NC}"
 "$CONTAINER_ENGINE" build -t md2pdf "$RESOURCE_DIR"
 
+# Copy logo next to the input so the container can see it (both formats)
+LOGO_COPIED=""
+LOGO_FILE=""
+if [ -n "$LOGO" ]; then
+    LOGO_FILE=$(basename "$LOGO")
+    if [ ! -f "$INPUT_DIR/$LOGO_FILE" ]; then
+        if [ -f "$LOGO" ]; then
+            cp "$LOGO" "$INPUT_DIR/$LOGO_FILE"
+            LOGO_COPIED="$INPUT_DIR/$LOGO_FILE"
+        else
+            echo -e "${RED}Error: Logo file '$LOGO' not found${NC}"
+            exit 1
+        fi
+    fi
+fi
+
 # Build title page header with LaTeX definitions (for logo override)
 TITLEPAGE_HEADER=""
-LOGO_COPIED=""
 HEADER_INCLUDE=()
-if [ -n "$LOGO" ] || [ -n "$AUTHOR" ] || [ -n "$DATE" ]; then
+if [ "$FORMAT" = "pdf" ] && { [ -n "$LOGO" ] || [ -n "$AUTHOR" ] || [ -n "$DATE" ]; }; then
     TITLEPAGE_HEADER="$INPUT_DIR/.titlepage-header.tex"
 
     # Create header file with variable definitions
     echo "% Auto-generated title page variables" > "$TITLEPAGE_HEADER"
 
     if [ -n "$LOGO" ]; then
-        LOGO_FILE=$(basename "$LOGO")
-        # If logo is not in input directory, copy it there
-        if [ ! -f "$INPUT_DIR/$LOGO_FILE" ]; then
-            if [ -f "$LOGO" ]; then
-                cp "$LOGO" "$INPUT_DIR/$LOGO_FILE"
-                LOGO_COPIED="$INPUT_DIR/$LOGO_FILE"
-            else
-                echo -e "${RED}Error: Logo file '$LOGO' not found${NC}"
-                exit 1
-            fi
-        fi
         echo "\\newcommand{\\titlelogo}{/data/$LOGO_FILE}" >> "$TITLEPAGE_HEADER"
     fi
     if [ -n "$AUTHOR" ]; then
@@ -222,33 +269,81 @@ if [ -n "$LOGO" ] || [ -n "$AUTHOR" ] || [ -n "$DATE" ]; then
 fi
 
 # Run conversion
-"$CONTAINER_ENGINE" run --rm \
-    "${ENGINE_RUN_FLAGS[@]}" \
-    -v "$INPUT_DIR:/data" \
-    --security-opt seccomp=unconfined \
-    -e MERMAID_FILTER_WIDTH=1200 \
-    -e MERMAID_FILTER_HEIGHT=800 \
-    -e MERMAID_FILTER_FORMAT=pdf \
-    -e MERMAID_FILTER_THEME="$THEME" \
-    -e MERMAID_FILTER_BACKGROUND=transparent \
-    md2pdf \
-    pandoc "/data/$INPUT_FILE" \
-    -o "/data/$TEMP_OUTPUT_FILE" \
-    --pdf-engine=xelatex \
-    --toc \
-    --toc-depth=3 \
-    --number-sections \
-    --filter mermaid-filter \
-    --lua-filter /filters/no-pagebreak.lua \
-    --lua-filter /filters/alerts.lua \
-    --lua-filter /filters/horizontal-rule.lua \
-    --lua-filter /filters/table-autofit.lua \
-    --template /templates/config.tex \
-    --shift-heading-level-by=-1 \
-    -H /templates/header.tex \
-    "${HEADER_INCLUDE[@]}" \
-    -B /templates/titlepage.tex \
-    -f markdown-implicit_figures
+TEMP_REFERENCE=""
+if [ "$FORMAT" = "docx" ]; then
+    # Title page data goes in as metadata for filters/titlepage-docx.lua
+    META_ARGS=()
+    if [ -n "$LOGO" ]; then
+        META_ARGS+=(-M "titlelogo=/data/$LOGO_FILE")
+    fi
+    if [ -n "$AUTHOR" ]; then
+        META_ARGS+=(-M "author=$AUTHOR")
+    fi
+    if [ -n "$DATE" ]; then
+        META_ARGS+=(-M "date=$DATE")
+    fi
+
+    # Styling comes from the reference doc; patch a copy for font/margin overrides
+    REFERENCE_ARG="--reference-doc=/templates/reference.docx"
+    if [ "$FONT" != "DejaVu Sans" ] || [ "$MARGIN" != "2.5cm" ]; then
+        TEMP_REFERENCE="$INPUT_DIR/.tmp_reference.docx"
+        patch_reference_docx "$RESOURCE_DIR/templates/reference.docx" "$TEMP_REFERENCE" "$FONT" "$MARGIN"
+        REFERENCE_ARG="--reference-doc=/data/.tmp_reference.docx"
+    fi
+
+    "$CONTAINER_ENGINE" run --rm \
+        "${ENGINE_RUN_FLAGS[@]}" \
+        -v "$INPUT_DIR:/data" \
+        --security-opt seccomp=unconfined \
+        -e MERMAID_FILTER_WIDTH=1200 \
+        -e MERMAID_FILTER_HEIGHT=800 \
+        -e MERMAID_FILTER_FORMAT=png \
+        -e MERMAID_FILTER_SCALE=3 \
+        -e MERMAID_FILTER_THEME="$THEME" \
+        -e MERMAID_FILTER_BACKGROUND=transparent \
+        md2pdf \
+        pandoc "/data/$INPUT_FILE" \
+        -o "/data/$TEMP_OUTPUT_FILE" \
+        --number-sections \
+        --filter mermaid-filter \
+        --lua-filter /filters/no-pagebreak.lua \
+        --lua-filter /filters/alerts.lua \
+        --lua-filter /filters/horizontal-rule.lua \
+        --lua-filter /filters/table-autofit.lua \
+        --lua-filter /filters/titlepage-docx.lua \
+        "$REFERENCE_ARG" \
+        --shift-heading-level-by=-1 \
+        "${META_ARGS[@]}" \
+        -f markdown-implicit_figures
+else
+    "$CONTAINER_ENGINE" run --rm \
+        "${ENGINE_RUN_FLAGS[@]}" \
+        -v "$INPUT_DIR:/data" \
+        --security-opt seccomp=unconfined \
+        -e MERMAID_FILTER_WIDTH=1200 \
+        -e MERMAID_FILTER_HEIGHT=800 \
+        -e MERMAID_FILTER_FORMAT=pdf \
+        -e MERMAID_FILTER_THEME="$THEME" \
+        -e MERMAID_FILTER_BACKGROUND=transparent \
+        md2pdf \
+        pandoc "/data/$INPUT_FILE" \
+        -o "/data/$TEMP_OUTPUT_FILE" \
+        --pdf-engine=xelatex \
+        --toc \
+        --toc-depth=3 \
+        --number-sections \
+        --filter mermaid-filter \
+        --lua-filter /filters/no-pagebreak.lua \
+        --lua-filter /filters/alerts.lua \
+        --lua-filter /filters/horizontal-rule.lua \
+        --lua-filter /filters/table-autofit.lua \
+        --template /templates/config.tex \
+        --shift-heading-level-by=-1 \
+        -H /templates/header.tex \
+        "${HEADER_INCLUDE[@]}" \
+        -B /templates/titlepage.tex \
+        -f markdown-implicit_figures
+fi
 
 CONVERSION_RESULT=$?
 
@@ -258,6 +353,9 @@ if [ -n "$TITLEPAGE_HEADER" ] && [ -f "$TITLEPAGE_HEADER" ]; then
 fi
 if [ -n "$LOGO_COPIED" ] && [ -f "$LOGO_COPIED" ]; then
     rm -f "$LOGO_COPIED"
+fi
+if [ -n "$TEMP_REFERENCE" ] && [ -f "$TEMP_REFERENCE" ]; then
+    rm -f "$TEMP_REFERENCE"
 fi
 
 if [ $CONVERSION_RESULT -eq 0 ]; then
