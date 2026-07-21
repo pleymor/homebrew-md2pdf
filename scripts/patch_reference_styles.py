@@ -5,6 +5,7 @@
 - Centers the Title, Subtitle, Author and Date paragraph styles
 - Adds the TitleLogo and Alert* paragraph styles used by the Lua filters
 - Sets default page margins to 2.5cm (1417 twips)
+- Adds a centered "PAGE/NUMPAGES" footer using Word's auto-numbering fields
 """
 import re
 import sys
@@ -38,6 +39,65 @@ TITLELOGO_STYLE = (
 )
 
 MARGIN_TWIPS = "1417"  # 2.5 cm
+
+# Relationship id for the footer part; well above pandoc's default ids so it
+# never collides. Pandoc remaps it on output, so the exact value is internal.
+FOOTER_RID = "rId50"
+
+# Centered footer showing "<current page>/<total pages>" via Word field codes.
+# PAGE and NUMPAGES auto-update in Word (select all, then F9).
+FOOTER_XML = (
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+    '<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+    "<w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr>"
+    '<w:fldSimple w:instr=" PAGE "><w:r><w:t>1</w:t></w:r></w:fldSimple>'
+    "<w:r><w:t>/</w:t></w:r>"
+    '<w:fldSimple w:instr=" NUMPAGES "><w:r><w:t>1</w:t></w:r></w:fldSimple>'
+    "</w:p></w:ftr>"
+)
+
+FOOTER_CONTENT_TYPE = (
+    '<Override PartName="/word/footer1.xml" '
+    'ContentType="application/vnd.openxmlformats-officedocument'
+    '.wordprocessingml.footer+xml"/>'
+)
+
+FOOTER_RELATIONSHIP = (
+    f'<Relationship Id="{FOOTER_RID}" '
+    'Type="http://schemas.openxmlformats.org/officeDocument/2006/'
+    'relationships/footer" Target="footer1.xml"/>'
+)
+
+FOOTER_REFERENCE = f'<w:footerReference w:type="default" r:id="{FOOTER_RID}"/>'
+
+
+def add_footer(ref: Path) -> None:
+    """Adds the page-number footer part and wires it into the document.
+
+    Creates word/footer1.xml, declares its content type, registers a
+    relationship, and references it from the section's sectPr so Word renders
+    a centered "PAGE/NUMPAGES" footer on every page.
+    """
+    (ref / "word" / "footer1.xml").write_text(FOOTER_XML, encoding="utf-8")
+
+    ct_path = ref / "[Content_Types].xml"
+    ct = ct_path.read_text(encoding="utf-8")
+    if "footer1.xml" not in ct:
+        ct = ct.replace("</Types>", FOOTER_CONTENT_TYPE + "</Types>")
+        ct_path.write_text(ct, encoding="utf-8")
+
+    rels_path = ref / "word" / "_rels" / "document.xml.rels"
+    rels = rels_path.read_text(encoding="utf-8")
+    if "footer1.xml" not in rels:
+        rels = rels.replace("</Relationships>", FOOTER_RELATIONSHIP + "</Relationships>")
+        rels_path.write_text(rels, encoding="utf-8")
+
+    doc_path = ref / "word" / "document.xml"
+    doc = doc_path.read_text(encoding="utf-8")
+    if "<w:footerReference" not in doc:
+        # footerReference must precede pgSz/pgMar in the sectPr child order.
+        doc = doc.replace("<w:sectPr>", "<w:sectPr>" + FOOTER_REFERENCE, 1)
+        doc_path.write_text(doc, encoding="utf-8")
 
 
 def center_style(xml: str, style_id: str) -> str:
@@ -100,6 +160,8 @@ def main() -> None:
             doc,
         )
     doc_path.write_text(doc, encoding="utf-8")
+
+    add_footer(ref)
 
 
 if __name__ == "__main__":

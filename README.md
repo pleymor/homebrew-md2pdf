@@ -134,6 +134,7 @@ With `--word` (or a `.docx` output filename), the document is converted to Word 
 
 - **Cover page** built from `--logo`, `--author` and `--date` (centered logo, title, author, date).
 - **Table of contents** inserted as a native Word field: open the document, select all (`Ctrl`/`Cmd`+`A`) and press `F9` to populate it. It stays clickable and refreshable.
+- **Page numbers** in a centered footer showing `current/total`, using Word's native `PAGE`/`NUMPAGES` fields (they auto-update, e.g. via `F9`).
 - **Mermaid diagrams** rendered as high-resolution PNG images, automatically sized to fit the page.
 - **GitHub alerts** styled as colored boxes, **`---` page breaks** and **auto-fit tables** work like in PDF.
 - `--font` and `--margin` are applied to the document styles. Styling comes from `templates/reference.docx` (regenerate it with `scripts/build-reference-docx.sh` after customizations).

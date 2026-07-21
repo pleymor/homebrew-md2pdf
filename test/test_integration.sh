@@ -16,6 +16,9 @@ check "docx cover has author" grep -q 'Test Author' <<< "$doc"
 check "docx has page breaks" grep -q '<w:br w:type="page"/>' <<< "$doc"
 check "docx alert styled" grep -q 'w:val="AlertNote"' <<< "$doc"
 check "docx embeds images" bash -c "unzip -l test/tmp/example.docx | grep -q 'word/media/'"
+footer=$(unzip -p test/tmp/example.docx word/footer1.xml 2>/dev/null)
+check "docx footer has PAGE field" grep -q 'w:instr=" PAGE "' <<< "$footer"
+check "docx footer has NUMPAGES field" grep -q 'w:instr=" NUMPAGES "' <<< "$footer"
 
 # Font/margin overrides are patched into a temp reference doc
 ./md2pdf.sh test/fixtures/hr.md test/tmp/hr-font.docx --font "Arial" --margin 1in
