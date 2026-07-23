@@ -10,7 +10,7 @@ jobs:
     name: Lint & static checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: ShellCheck md2pdf.sh
         # SC2034: --margin/--font are parsed but not yet wired into pandoc
@@ -36,7 +36,7 @@ jobs:
       matrix:
         engine: [docker, podman]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Podman
         if: matrix.engine == 'podman'
