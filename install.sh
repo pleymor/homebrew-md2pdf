@@ -5,7 +5,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/pleymor/homebrew-md2pdf/main/install.sh | bash
 #
 # Environment variables:
-#   MD2PDF_VERSION   Release tag to install (default: v1.5.0)
+#   MD2PDF_VERSION   Release tag to install (default: v1.5.1)
 #   MD2PDF_PREFIX    Directory to install files into (default: ~/.local/share/md2pdf)
 #   MD2PDF_BIN       Directory for the md2pdf symlink (default: ~/.local/bin)
 
@@ -18,7 +18,7 @@ YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 REPO="pleymor/homebrew-md2pdf"
-VERSION="${MD2PDF_VERSION:-v1.5.0}"
+VERSION="${MD2PDF_VERSION:-v1.5.1}"
 PREFIX="${MD2PDF_PREFIX:-$HOME/.local/share/md2pdf}"
 BIN_DIR="${MD2PDF_BIN:-$HOME/.local/bin}"
 
