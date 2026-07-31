@@ -173,7 +173,7 @@ This document demonstrates conversion capabilities with:
 - ✅ Code and quotes
 - ✅ Unicode support (accents, emojis)
 
-The PDF output should be clean and professional! 🎉
+The PDF output should be **clean** and **professional**! 🎉
 
 ## Notes, Warnings and Errors
 

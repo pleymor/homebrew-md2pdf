@@ -69,7 +69,29 @@
 % Emoji/Symbol support via Symbola font (compatible with XeLaTeX)
 \usepackage{ucharclasses}
 \newfontfamily\symbola{Symbola}
-\setTransitionsForSymbols{\symbola}{}
-\setTransitionTo{MiscellaneousSymbolsAndPictographs}{\symbola}
-\setTransitionTo{Emoticons}{\symbola}
-\setTransitionTo{Dingbats}{\symbola}
+
+% ucharclasses switches the font family when a symbol is met; the switch must be
+% undone when leaving the symbol, otherwise Symbola stays selected for the rest
+% of the document. Symbola has no bold or italic member, so a leaking switch
+% silently drops every following \textbf/\emph. Only the family is restored
+% (never \normalfont) so an emoji inside bold or italic text keeps its style.
+\newif\ifsymbolaactive
+\newcommand*{\familybeforesymbola}{}
+\makeatletter
+\newcommand*{\symbolaon}{%
+  \ifsymbolaactive\else
+    \xdef\familybeforesymbola{\f@family}%
+    \global\symbolaactivetrue
+  \fi
+  \symbola}
+\makeatother
+\newcommand*{\symbolaoff}{%
+  \ifsymbolaactive
+    \global\symbolaactivefalse
+    \fontfamily{\familybeforesymbola}\selectfont
+  \fi}
+
+\setTransitionsForSymbols{\symbolaon}{\symbolaoff}
+\setTransitionsFor{MiscellaneousSymbolsAndPictographs}{\symbolaon}{\symbolaoff}
+\setTransitionsFor{Emoticons}{\symbolaon}{\symbolaoff}
+\setTransitionsFor{Dingbats}{\symbolaon}{\symbolaoff}

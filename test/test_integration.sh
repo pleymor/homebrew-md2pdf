@@ -33,4 +33,28 @@ check "docx margin override applied" grep -q 'w:top="1440"' <<< "$sect"
 check "pdf conversion exits 0" test $? -eq 0
 check "pdf file exists" test -f test/tmp/example.pdf
 
+# Emoji must not leak their fallback font into the following text: Symbola has
+# no bold/italic member, so a leaking switch silently drops all formatting.
+rm -f test/tmp/emoji.pdf
+./md2pdf.sh test/fixtures/emoji.md test/tmp/emoji.pdf
+check "emoji pdf exists" test -f test/tmp/emoji.pdf
+
+# fonts_on <needle> — fonts used by the page holding <needle> ("?" if not found)
+fonts_on() {
+  local page
+  page=$(pdf_page_of test/tmp/emoji.pdf "$1") || { echo "?"; return; }
+  pdffonts -f "$page" -l "$page" test/tmp/emoji.pdf
+}
+
+emoji_fonts=$(fonts_on "A check mark")
+inside_fonts=$(fonts_on "stays bold to the end")
+after_fonts=$(fonts_on "must stay bold")
+
+check "emoji page renders with Symbola" grep -q 'Symbola' <<< "$emoji_fonts"
+check "bold right after emoji stays bold" grep -q 'Bold' <<< "$emoji_fonts"
+check "bold around an emoji stays bold" grep -q 'Bold' <<< "$inside_fonts"
+check "later page keeps bold" grep -q 'Bold' <<< "$after_fonts"
+grep -q 'Symbola' <<< "$after_fonts" && leaked=1 || leaked=0
+check "emoji font does not leak to later pages" test "$leaked" -eq 0
+
 finish
