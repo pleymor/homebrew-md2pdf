@@ -33,6 +33,11 @@ check "docx margin override applied" grep -q 'w:top="1440"' <<< "$sect"
 check "pdf conversion exits 0" test $? -eq 0
 check "pdf file exists" test -f test/tmp/example.pdf
 
+# hyperref draws a red box around every link unless it is loaded with hidelinks
+read -r links bordered <<< "$(python3 test/pdf_link_borders.py test/tmp/example.pdf)"
+check "pdf has link annotations" test "${links:-0}" -gt 0
+check "pdf links have no coloured border box" test "${bordered:-1}" -eq 0
+
 # Emoji must not leak their fallback font into the following text: Symbola has
 # no bold/italic member, so a leaking switch silently drops all formatting.
 rm -f test/tmp/emoji.pdf
