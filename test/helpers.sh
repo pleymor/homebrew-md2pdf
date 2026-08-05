@@ -26,6 +26,11 @@ pdf_page_of() {
   return 1
 }
 
+# lacks <needle> <text> — passes when <text> does not contain <needle>
+lacks() {
+  ! grep -qF "$1" <<< "$2"
+}
+
 finish() {
   echo "$PASS passed, $FAIL failed"
   [ "$FAIL" -eq 0 ]

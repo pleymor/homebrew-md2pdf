@@ -77,9 +77,6 @@ checklist_xml=$(docxml checklist.docx)
 check "checklist: w14 namespace declared for Word" grep -q 'xmlns:w14=' <<< "$checklist_xml"
 check "checklist: item text preserved" grep -q 'Item 3' <<< "$checklist_xml"
 
-# lacks <needle> <text> — passes when <text> does not contain <needle>
-lacks() { ! grep -qF "$1" <<< "$2"; }
-
 checklist_tex=$(run_pandoc_text /data/checklist.md -t latex --lua-filter /filters/checklist-docx.lua)
 check "checklist: latex keeps pandoc's own task list" grep -q 'tightlist' <<< "$checklist_tex"
 check "checklist: latex has no openxml leak" lacks 'w14:checkbox' "$checklist_tex"
@@ -106,6 +103,25 @@ check "cover: author present" grep -q 'Jane Doe' <<< "$cover_xml"
 check "cover: title styled" grep -q 'w:val="Title"' <<< "$cover_xml"
 check "cover: logo embedded" bash -c "unzip -l test/tmp/cover.docx | grep -q 'word/media/'"
 check "cover: page break after cover" grep -q '<w:br w:type="page"/>' <<< "$cover_xml"
+
+# The TOC ships with its entries already computed, so no field refresh is
+# needed to read it (only the page numbers need Word's layout engine).
+run_pandoc toc.docx /data/toc.md \
+  --shift-heading-level-by=-1 --number-sections \
+  --lua-filter /filters/titlepage-docx.lua
+toc_report=$(python3 test/docx_toc.py test/tmp/toc.docx)
+# toc_stat <key> — value of <key> in the TOC report
+toc_stat() { sed -n "s/^$1=//p" <<< "$toc_report"; }
+check "toc: field kept for refreshing" test "$(toc_stat field)" -eq 1
+check "toc: field flagged dirty so page numbers can fill in" test "$(toc_stat dirty)" -eq 1
+check "toc: every heading down to level 3 is listed" test "$(toc_stat entries)" -eq 5
+check "toc: entries agree with the headings" test "$(toc_stat mismatch)" -eq 0
+check "toc: entries are clickable" test "$(toc_stat linked)" -eq 5
+check "toc: level 1 entry numbered" grep -qF 'entry=TOC1|alpha|1 Alpha' <<< "$toc_report"
+check "toc: level 2 entry indented and numbered" grep -qF 'entry=TOC2|alpha-one|1.1 Alpha One' <<< "$toc_report"
+check "toc: numbering restarts under the next section" grep -qF 'entry=TOC2|beta-one|2.1 Beta One' <<< "$toc_report"
+check "toc: level 3 entry listed" grep -qF 'entry=TOC3|deep-enough|2.1.1 Deep Enough' <<< "$toc_report"
+check "toc: deeper headings left out" lacks 'Too Deep' "$toc_report"
 
 # --- image-fit.lua ---
 python3 - <<'EOF'

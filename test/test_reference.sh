@@ -6,7 +6,7 @@ source test/helpers.sh
 
 check "reference.docx exists" test -f templates/reference.docx
 styles=$(unzip -p templates/reference.docx word/styles.xml 2>/dev/null)
-for sid in AlertNote AlertTip AlertImportant AlertWarning AlertCaution TitleLogo Checklist; do
+for sid in AlertNote AlertTip AlertImportant AlertWarning AlertCaution TitleLogo Checklist TOC1 TOC2 TOC3; do
   check "reference has $sid style" grep -q "w:styleId=\"$sid\"" <<< "$styles"
 done
 # Checklist items sit where a bullet would, without a list marker

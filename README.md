@@ -144,8 +144,8 @@ Unicode emojis are supported in the document.
 With `--word` (or a `.docx` output filename), the document is converted to Word instead of PDF, with the same features:
 
 - **Cover page** built from `--logo`, `--author` and `--date` (centered logo, title, author, date).
-- **Table of contents** inserted as a native Word field: open the document, select all (`Ctrl`/`Cmd`+`A`) and press `F9` to populate it. It stays clickable and refreshable.
-- **Page numbers** in a centered footer showing `current/total`, using Word's native `PAGE`/`NUMPAGES` fields (they auto-update, e.g. via `F9`).
+- **Table of contents** already filled in: the entries are computed during the conversion and stored in the document, so opening it shows the full outline with clickable links, no `F9` and no "update fields?" prompt. It stays a native Word TOC field, so refreshing it (select all, `F9`) rebuilds it and adds the page numbers — those are the one part only Word's layout engine can produce.
+- **Page numbers** in a centered footer showing `current/total`, using Word's native `PAGE`/`NUMPAGES` fields, which Word fills in as it paginates.
 - **Mermaid diagrams** rendered as high-resolution PNG images, automatically sized to fit the page.
 - **Task lists** turned into clickable checkbox content controls (`Checklist` style, no bullet) instead of a bullet followed by a box glyph.
 - **GitHub alerts** styled as colored boxes, **`---` page breaks** and **auto-fit tables** work like in PDF.

@@ -3,7 +3,7 @@
 
 - Sets every font to DejaVu Sans (styles.xml literals + theme fonts)
 - Centers the Title, Subtitle, Author and Date paragraph styles
-- Adds the TitleLogo, Checklist and Alert* paragraph styles used by the Lua filters
+- Adds the TitleLogo, Checklist, TOC* and Alert* paragraph styles used by the Lua filters
 - Sets default page margins to 2.5cm (1417 twips)
 - Adds a centered "PAGE/NUMPAGES" footer using Word's auto-numbering fields
 """
@@ -43,6 +43,22 @@ CHECKLIST_STYLE = (
     "</w:pPr>"
     "</w:style>"
 )
+
+# Table of contents entries (see filters/titlepage-docx.lua). Each level is
+# indented a little further; the right tab stop with a dot leader is where Word
+# puts the page numbers once it refreshes the field.
+TOC_STYLE_TEMPLATE = (
+    '<w:style w:type="paragraph" w:customStyle="1" w:styleId="TOC{level}">'
+    '<w:name w:val="toc {level}"/><w:basedOn w:val="BodyText"/>'
+    "<w:pPr>"
+    '<w:tabs><w:tab w:val="right" w:leader="dot" w:pos="9071"/></w:tabs>'
+    '<w:spacing w:before="0" w:after="60"/>'
+    '<w:ind w:left="{indent}"/>'
+    "</w:pPr>"
+    "</w:style>"
+)
+
+TOC_LEVEL_INDENTS = {1: "0", 2: "240", 3: "480"}
 
 TITLELOGO_STYLE = (
     '<w:style w:type="paragraph" w:customStyle="1" w:styleId="TitleLogo">'
@@ -142,9 +158,17 @@ def main() -> None:
     xml = re.sub(r'\s*w:(asciiTheme|hAnsiTheme|cstheme|eastAsiaTheme)="[^"]*"', "", xml)
     for sid in ("Title", "Subtitle", "Author", "Date"):
         xml = center_style(xml, sid)
-    additions = TITLELOGO_STYLE + CHECKLIST_STYLE + "".join(
-        ALERT_STYLE_TEMPLATE.format(sid=sid, border=border, fill=fill)
-        for sid, (border, fill) in ALERTS.items()
+    additions = (
+        TITLELOGO_STYLE
+        + CHECKLIST_STYLE
+        + "".join(
+            TOC_STYLE_TEMPLATE.format(level=level, indent=indent)
+            for level, indent in TOC_LEVEL_INDENTS.items()
+        )
+        + "".join(
+            ALERT_STYLE_TEMPLATE.format(sid=sid, border=border, fill=fill)
+            for sid, (border, fill) in ALERTS.items()
+        )
     )
     xml = xml.replace("</w:styles>", additions + "</w:styles>")
     styles_path.write_text(xml, encoding="utf-8")

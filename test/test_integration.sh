@@ -20,6 +20,16 @@ check "docx embeds images" bash -c "unzip -l test/tmp/example.docx | grep -q 'wo
 checklist=$(python3 test/docx_checklist.py test/tmp/example.docx 2>/dev/null)
 check "docx checklist has clickable checkboxes" test "$(sed -n 's/^checkboxes=//p' <<< "$checklist")" -eq 3
 check "docx checklist items are not bulleted" test "$(sed -n 's/^bulleted_tasks=//p' <<< "$checklist")" -eq 0
+# The TOC ships filled in, and nothing asks Word to update fields on open
+# (that only produces a prompt, and answering "no" leaves the TOC empty).
+settings=$(unzip -p test/tmp/example.docx word/settings.xml 2>/dev/null)
+check "docx does not ask Word to update fields on open" lacks 'updateFields' "$settings"
+toc=$(python3 test/docx_toc.py test/tmp/example.docx)
+check "docx TOC lists the headings" test "$(sed -n 's/^entries=//p' <<< "$toc")" -ge 10
+check "docx TOC entries match the headings" test "$(sed -n 's/^mismatch=//p' <<< "$toc")" -eq 0
+check "docx TOC entries are clickable" test "$(sed -n 's/^linked=//p' <<< "$toc")" -ge 10
+check "docx TOC field is marked dirty" grep -q 'w:dirty="true"' <<< "$doc"
+
 footer=$(unzip -p test/tmp/example.docx word/footer1.xml 2>/dev/null)
 check "docx footer has PAGE field" grep -q 'w:instr=" PAGE "' <<< "$footer"
 check "docx footer has NUMPAGES field" grep -q 'w:instr=" NUMPAGES "' <<< "$footer"
