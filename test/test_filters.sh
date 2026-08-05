@@ -47,6 +47,29 @@ check "alerts: docx keeps content" grep -q 'Useful information.' <<< "$alerts_xm
 alerts_tex=$(run_pandoc_text /data/alerts.md -t latex --lua-filter /filters/alerts.lua)
 check "alerts: latex still uses tcolorbox" grep -q 'tcolorbox' <<< "$alerts_tex"
 
+# --- checklist-docx.lua ---
+run_pandoc checklist.docx /data/checklist.md --lua-filter /filters/checklist-docx.lua
+checklist_stats=$(python3 test/docx_checklist.py test/tmp/checklist.docx)
+# stat <key> — value of <key> in the checklist report ("" when missing)
+stat() { sed -n "s/^$1=//p" <<< "$checklist_stats"; }
+check "checklist: all three items kept" test "$(stat task_paras)" -eq 3
+check "checklist: items lose the bullet" test "$(stat bulleted_tasks)" -eq 0
+check "checklist: items carry the Checklist style" test "$(stat styled_tasks)" -eq 3
+check "checklist: one clickable checkbox per item" test "$(stat checkboxes)" -eq 3
+check "checklist: '- [x]' item comes pre-checked" test "$(stat checked)" -eq 1
+check "checklist: no bare glyph left outside a checkbox" test "$(stat legacy_glyphs)" -eq 0
+check "checklist: plain bullets keep their numbering" test "$(stat plain_bulleted)" -eq 2
+checklist_xml=$(docxml checklist.docx)
+check "checklist: w14 namespace declared for Word" grep -q 'xmlns:w14=' <<< "$checklist_xml"
+check "checklist: item text preserved" grep -q 'Item 3' <<< "$checklist_xml"
+
+# lacks <needle> <text> — passes when <text> does not contain <needle>
+lacks() { ! grep -qF "$1" <<< "$2"; }
+
+checklist_tex=$(run_pandoc_text /data/checklist.md -t latex --lua-filter /filters/checklist-docx.lua)
+check "checklist: latex keeps pandoc's own task list" grep -q 'tightlist' <<< "$checklist_tex"
+check "checklist: latex has no openxml leak" lacks 'w14:checkbox' "$checklist_tex"
+
 # --- table-autofit.lua ---
 run_pandoc table.docx /data/table.md --lua-filter /filters/table-autofit.lua
 widths=$(docxml table.docx | grep -o '<w:gridCol w:w="[0-9]*"' | grep -o '[0-9][0-9]*')

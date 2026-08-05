@@ -120,6 +120,17 @@ Support for GitHub-style alerts:
 > Danger, irreversible action.
 ```
 
+### Task lists
+
+Task lists are rendered as checkboxes:
+
+```markdown
+- [ ] Still to do
+- [x] Already done
+```
+
+In PDF they come out as `☐`/`☒` boxes. In Word they become real checkbox content controls without a bullet, so readers can tick them straight in the document.
+
 ### Mermaid diagrams
 
 Mermaid diagrams are automatically converted to vector images (PDF) with the "forest" theme.
@@ -136,6 +147,7 @@ With `--word` (or a `.docx` output filename), the document is converted to Word 
 - **Table of contents** inserted as a native Word field: open the document, select all (`Ctrl`/`Cmd`+`A`) and press `F9` to populate it. It stays clickable and refreshable.
 - **Page numbers** in a centered footer showing `current/total`, using Word's native `PAGE`/`NUMPAGES` fields (they auto-update, e.g. via `F9`).
 - **Mermaid diagrams** rendered as high-resolution PNG images, automatically sized to fit the page.
+- **Task lists** turned into clickable checkbox content controls (`Checklist` style, no bullet) instead of a bullet followed by a box glyph.
 - **GitHub alerts** styled as colored boxes, **`---` page breaks** and **auto-fit tables** work like in PDF.
 - `--font` and `--margin` are applied to the document styles. Styling comes from `templates/reference.docx` (regenerate it with `scripts/build-reference-docx.sh` after customizations).
 

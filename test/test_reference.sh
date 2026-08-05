@@ -6,9 +6,12 @@ source test/helpers.sh
 
 check "reference.docx exists" test -f templates/reference.docx
 styles=$(unzip -p templates/reference.docx word/styles.xml 2>/dev/null)
-for sid in AlertNote AlertTip AlertImportant AlertWarning AlertCaution TitleLogo; do
+for sid in AlertNote AlertTip AlertImportant AlertWarning AlertCaution TitleLogo Checklist; do
   check "reference has $sid style" grep -q "w:styleId=\"$sid\"" <<< "$styles"
 done
+# Checklist items sit where a bullet would, without a list marker
+checklist_style=$(python3 -c 'import re,sys; x=sys.stdin.read(); m=re.search(r"<w:style [^>]*w:styleId=\"Checklist\".*?</w:style>", x, re.S); print(m.group(0) if m else "")' <<< "$styles")
+check "reference indents the Checklist style" grep -q '<w:ind ' <<< "$checklist_style"
 check "reference uses DejaVu Sans" grep -q 'DejaVu Sans' <<< "$styles"
 doc=$(unzip -p templates/reference.docx word/document.xml 2>/dev/null)
 check "reference margins are 2.5cm" grep -q 'w:top="1417"' <<< "$doc"

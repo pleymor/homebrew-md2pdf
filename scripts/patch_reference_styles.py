@@ -3,7 +3,7 @@
 
 - Sets every font to DejaVu Sans (styles.xml literals + theme fonts)
 - Centers the Title, Subtitle, Author and Date paragraph styles
-- Adds the TitleLogo and Alert* paragraph styles used by the Lua filters
+- Adds the TitleLogo, Checklist and Alert* paragraph styles used by the Lua filters
 - Sets default page margins to 2.5cm (1417 twips)
 - Adds a centered "PAGE/NUMPAGES" footer using Word's auto-numbering fields
 """
@@ -27,6 +27,19 @@ ALERT_STYLE_TEMPLATE = (
     '<w:shd w:val="clear" w:color="auto" w:fill="{fill}"/>'
     '<w:spacing w:before="120" w:after="120"/>'
     '<w:ind w:left="240" w:right="240"/>'
+    "</w:pPr>"
+    "</w:style>"
+)
+
+# Task-list items (see filters/checklist-docx.lua): no bullet, but indented
+# like one so the checkbox sits where the list marker would.
+CHECKLIST_STYLE = (
+    '<w:style w:type="paragraph" w:customStyle="1" w:styleId="Checklist">'
+    '<w:name w:val="Checklist"/><w:basedOn w:val="BodyText"/>'
+    "<w:pPr>"
+    '<w:spacing w:before="0" w:after="60"/>'
+    '<w:ind w:left="360"/>'
+    "<w:contextualSpacing/>"
     "</w:pPr>"
     "</w:style>"
 )
@@ -129,7 +142,7 @@ def main() -> None:
     xml = re.sub(r'\s*w:(asciiTheme|hAnsiTheme|cstheme|eastAsiaTheme)="[^"]*"', "", xml)
     for sid in ("Title", "Subtitle", "Author", "Date"):
         xml = center_style(xml, sid)
-    additions = TITLELOGO_STYLE + "".join(
+    additions = TITLELOGO_STYLE + CHECKLIST_STYLE + "".join(
         ALERT_STYLE_TEMPLATE.format(sid=sid, border=border, fill=fill)
         for sid, (border, fill) in ALERTS.items()
     )

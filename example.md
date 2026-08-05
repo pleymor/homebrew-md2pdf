@@ -163,6 +163,12 @@ pie title Time Distribution
     "Meetings" : 20
 ```
 
+## Checklist
+
+- [ ] Item 1
+- [ ] Item 2
+- [ ] Item 3
+
 ## Conclusion
 
 This document demonstrates conversion capabilities with:

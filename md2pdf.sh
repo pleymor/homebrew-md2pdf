@@ -309,6 +309,7 @@ if [ "$FORMAT" = "docx" ]; then
         --lua-filter /filters/image-fit.lua \
         --lua-filter /filters/no-pagebreak.lua \
         --lua-filter /filters/alerts.lua \
+        --lua-filter /filters/checklist-docx.lua \
         --lua-filter /filters/horizontal-rule.lua \
         --lua-filter /filters/table-autofit.lua \
         --lua-filter /filters/titlepage-docx.lua \
