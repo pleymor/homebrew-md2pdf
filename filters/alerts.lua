@@ -33,21 +33,47 @@ local alert_types = {
   }
 }
 
----@param text string
+---Reads the alert type off the start of an inline list.
+---@param inlines table the first block's inlines
 ---@return string|nil
-local function detect_alert_type(text)
-  local alert = text:match("^%[!(%u+)%]")
+local function detect_alert_type(inlines)
+  local first = inlines[1]
+  if not first or first.t ~= "Str" then
+    return nil
+  end
+  local alert = first.text:match("^%[!(%u+)%]")
   if alert and alert_types[alert] then
     return alert
   end
   return nil
 end
 
----@param text string
+---Drops the "[!TYPE]" marker, keeping every other inline as it is so bold,
+---italic, code spans and links inside the alert survive.
+---@param inlines table the first block's inlines
 ---@param alert_type string
----@return string
-local function remove_alert_marker(text, alert_type)
-  return text:gsub("^%[!" .. alert_type .. "%]%s*", "")
+---@return table inlines
+local function remove_alert_marker(inlines, alert_type)
+  local kept = {}
+  local first_index = 2
+
+  local leftover = inlines[1].text:gsub("^%[!" .. alert_type .. "%]%s*", "")
+  if leftover ~= "" then
+    table.insert(kept, pandoc.Str(leftover))
+  else
+    -- The marker had a line of its own: drop the break that followed it too
+    local following = inlines[2]
+    local is_break = following ~= nil
+      and (following.t == "Space" or following.t == "SoftBreak" or following.t == "LineBreak")
+    if is_break then
+      first_index = 3
+    end
+  end
+
+  for i = first_index, #inlines do
+    table.insert(kept, inlines[i])
+  end
+  return kept
 end
 
 function BlockQuote(el)
@@ -60,13 +86,7 @@ function BlockQuote(el)
     return el
   end
 
-  local first_inline = first_block.content[1]
-  if not first_inline or first_inline.t ~= "Str" then
-    return el
-  end
-
-  local first_text = pandoc.utils.stringify(first_block)
-  local alert_type = detect_alert_type(first_text)
+  local alert_type = detect_alert_type(first_block.content)
 
   if not alert_type then
     return el
@@ -75,13 +95,15 @@ function BlockQuote(el)
   local config = alert_types[alert_type]
 
   -- Remove the alert marker from the first paragraph
-  local cleaned_text = remove_alert_marker(first_text, alert_type)
+  local cleaned_inlines = remove_alert_marker(first_block.content, alert_type)
 
   -- Rebuild content without the marker
   local new_content = pandoc.List()
 
-  if cleaned_text ~= "" then
-    new_content:insert(pandoc.Para(pandoc.Str(cleaned_text)))
+  if #cleaned_inlines > 0 then
+    new_content:insert(
+      first_block.t == "Plain" and pandoc.Plain(cleaned_inlines) or pandoc.Para(cleaned_inlines)
+    )
   end
 
   for i = 2, #el.content do

@@ -44,8 +44,22 @@ check "alerts: docx NOTE style applied" grep -q 'w:val="AlertNote"' <<< "$alerts
 check "alerts: docx WARNING style applied" grep -q 'w:val="AlertWarning"' <<< "$alerts_xml"
 check "alerts: docx keeps content" grep -q 'Useful information.' <<< "$alerts_xml"
 
+# The alert marker sits in the first paragraph, whose inlines must survive
+note_fmt=$(python3 test/docx_alerts.py test/tmp/alerts.docx "Useful information")
+# note_stat <key> — value of <key> in the note formatting report
+note_stat() { sed -n "s/^$1=//p" <<< "$note_fmt"; }
+check "alerts: docx note keeps its style" test "$(note_stat style)" = "AlertNote"
+check "alerts: docx keeps bold in the first paragraph" test "$(note_stat bold)" -ge 1
+check "alerts: docx keeps italic in the first paragraph" test "$(note_stat italic)" -ge 1
+check "alerts: docx keeps code spans in the first paragraph" test "$(note_stat code)" -ge 1
+check "alerts: docx keeps links in the first paragraph" test "$(note_stat links)" -ge 1
+
 alerts_tex=$(run_pandoc_text /data/alerts.md -t latex --lua-filter /filters/alerts.lua)
 check "alerts: latex still uses tcolorbox" grep -q 'tcolorbox' <<< "$alerts_tex"
+check "alerts: latex keeps bold in the first paragraph" grep -q 'It supports \\textbf{bold}' <<< "$alerts_tex"
+check "alerts: latex keeps italic in the first paragraph" grep -q '\\emph{italic}' <<< "$alerts_tex"
+check "alerts: latex keeps code in the first paragraph" grep -q '\\texttt{code}' <<< "$alerts_tex"
+check "alerts: latex keeps links in the first paragraph" grep -q 'example.com' <<< "$alerts_tex"
 
 # --- checklist-docx.lua ---
 run_pandoc checklist.docx /data/checklist.md --lua-filter /filters/checklist-docx.lua
