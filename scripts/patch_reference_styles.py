@@ -5,6 +5,7 @@
 - Centers the Title, Subtitle, Author and Date paragraph styles
 - Adds the TitleLogo, Checklist, TOC* and Alert* paragraph styles used by the Lua filters
 - Sets default page margins to 2.5cm (1417 twips)
+- Draws plain black gridlines around and inside tables
 - Adds a centered "PAGE/NUMPAGES" footer using Word's auto-numbering fields
 """
 import re
@@ -68,6 +69,20 @@ TITLELOGO_STYLE = (
 )
 
 MARGIN_TWIPS = "1417"  # 2.5 cm
+
+# Plain 0.5pt black gridlines (w:sz is in eighths of a point). Pandoc's default
+# Table style only underlines the header row, which leaves the body borderless.
+# In the CT_TblPrBase sequence tblBorders sits between tblInd and tblCellMar.
+TABLE_BORDER_EDGES = ("top", "left", "bottom", "right", "insideH", "insideV")
+
+TABLE_BORDERS = (
+    "<w:tblBorders>"
+    + "".join(
+        f'<w:{edge} w:val="single" w:sz="4" w:space="0" w:color="000000"/>'
+        for edge in TABLE_BORDER_EDGES
+    )
+    + "</w:tblBorders>"
+)
 
 # Relationship id for the footer part; well above pandoc's default ids so it
 # never collides. Pandoc remaps it on output, so the exact value is internal.
@@ -149,6 +164,20 @@ def center_style(xml: str, style_id: str) -> str:
     return xml[: match.start()] + new + xml[match.end():]
 
 
+def border_table_style(xml: str) -> str:
+    """Adds black gridlines to the default table style.
+
+    Inserts TABLE_BORDERS into the Table style's <w:tblPr>, right before
+    <w:tblCellMar> so the child order stays schema-valid.
+    """
+    block_re = re.compile(r'<w:style [^>]*w:styleId="Table">.*?</w:style>', re.DOTALL)
+    match = block_re.search(xml)
+    if not match or "<w:tblBorders>" in match.group(0):
+        return xml
+    block = match.group(0).replace("<w:tblCellMar>", TABLE_BORDERS + "<w:tblCellMar>", 1)
+    return xml[: match.start()] + block + xml[match.end():]
+
+
 def main() -> None:
     ref = Path(sys.argv[1])
 
@@ -158,6 +187,7 @@ def main() -> None:
     xml = re.sub(r'\s*w:(asciiTheme|hAnsiTheme|cstheme|eastAsiaTheme)="[^"]*"', "", xml)
     for sid in ("Title", "Subtitle", "Author", "Date"):
         xml = center_style(xml, sid)
+    xml = border_table_style(xml)
     additions = (
         TITLELOGO_STYLE
         + CHECKLIST_STYLE
