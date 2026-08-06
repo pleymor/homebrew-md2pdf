@@ -7,7 +7,7 @@ class Md2pdf < Formula
   license "MIT"
 
   def install
-    libexec.install "md2pdf.sh", "templates", "filters", "Dockerfile"
+    libexec.install "md2pdf.sh", "templates", "filters", "scripts", "Dockerfile"
     (bin/"md2pdf").write_env_script libexec/"md2pdf.sh", {}
   end
 

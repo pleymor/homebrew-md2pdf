@@ -84,6 +84,15 @@ classDiagram
    - Sub-item B
 3. Third item
 
+A paragraph between two numbered lists. The next list must start again at 1
+instead of carrying on from the one above:
+
+1. Numbering restarts here
+2. Second item
+   1. Nested numbering restarts too
+   2. Second nested item
+3. Third item
+
 ### Code
 
 ```python

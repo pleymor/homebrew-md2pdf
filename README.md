@@ -148,6 +148,8 @@ With `--word` (or a `.docx` output filename), the document is converted to Word 
 - **Page numbers** in a centered footer showing `current/total`, using Word's native `PAGE`/`NUMPAGES` fields, which Word fills in as it paginates.
 - **Mermaid diagrams** rendered as high-resolution PNG images, automatically sized to fit the page.
 - **Task lists** turned into clickable checkbox content controls (`Checklist` style, no bullet) instead of a bullet followed by a box glyph.
+- **Tables** drawn with plain black gridlines around every cell, on top of the auto-fit column widths.
+- **Numbered lists** each start again at `1`: every list gets its own numbering definition, so Word does not carry the count over from the previous one.
 - **GitHub alerts** styled as colored boxes, **`---` page breaks** and **auto-fit tables** work like in PDF.
 - `--font` and `--margin` are applied to the document styles. Styling comes from `templates/reference.docx` (regenerate it with `scripts/build-reference-docx.sh` after customizations).
 

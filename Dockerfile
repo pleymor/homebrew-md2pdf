@@ -26,9 +26,10 @@ RUN useradd -m -s /bin/bash converter && \
     mkdir -p /data /filters && \
     chown converter:converter /data /filters
 
-# Copy Lua filters and templates
+# Copy Lua filters, templates and the OOXML post-processing scripts
 COPY filters/ /filters/
 COPY templates/ /templates/
+COPY scripts/ /scripts/
 
 # Create working directory
 WORKDIR /data

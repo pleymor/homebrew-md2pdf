@@ -317,6 +317,19 @@ if [ "$FORMAT" = "docx" ]; then
         --shift-heading-level-by=-1 \
         "${META_ARGS[@]}" \
         -f markdown-implicit_figures
+    CONVERSION_RESULT=$?
+
+    # Pandoc points every ordered list at one abstract numbering definition, so
+    # Word carries the count over from one list to the next; give each list its
+    # own definition to make them all start again at 1.
+    if [ $CONVERSION_RESULT -eq 0 ]; then
+        "$CONTAINER_ENGINE" run --rm \
+            "${ENGINE_RUN_FLAGS[@]}" \
+            -v "$INPUT_DIR:/data" \
+            md2pdf \
+            python3 /scripts/restart_list_numbering.py "/data/$TEMP_OUTPUT_FILE"
+        CONVERSION_RESULT=$?
+    fi
 else
     "$CONTAINER_ENGINE" run --rm \
         "${ENGINE_RUN_FLAGS[@]}" \
@@ -345,9 +358,8 @@ else
         "${HEADER_INCLUDE[@]}" \
         -B /templates/titlepage.tex \
         -f markdown-implicit_figures
+    CONVERSION_RESULT=$?
 fi
-
-CONVERSION_RESULT=$?
 
 # Clean up temporary files
 if [ -n "$TITLEPAGE_HEADER" ] && [ -f "$TITLEPAGE_HEADER" ]; then
