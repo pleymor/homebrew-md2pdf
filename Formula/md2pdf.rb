@@ -1,9 +1,9 @@
 class Md2pdf < Formula
   desc "Convert Markdown to PDF with Mermaid diagram support"
   homepage "https://github.com/pleymor/md2pdf"
-  url "https://github.com/pleymor/md2pdf/archive/refs/tags/v1.7.0.tar.gz"
-  version "1.7.0"
-  sha256 "b2aacd62739edd044ea596e3624e8f3cb3040b3012e62fee92bc02855578783d"
+  url "https://github.com/pleymor/md2pdf/archive/refs/tags/v1.8.0.tar.gz"
+  version "1.8.0"
+  sha256 "b79f6e7387e7fa0391752ee322722dcb5b40aa5df5aa4ba3e7eadeaf88ef85b8"
   license "MIT"
 
   def install
