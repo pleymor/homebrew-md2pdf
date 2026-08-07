@@ -33,6 +33,18 @@ margin_to_twips() {
     esac
 }
 
+# Maps a Microsoft font onto the metrically identical free face that ships in
+# the image; anything else is echoed back unchanged. Arial and friends are
+# proprietary, so XeLaTeX would never find them under their own name.
+pdf_font_alias() {
+    case "$1" in
+        Arial)             echo "Liberation Sans" ;;
+        "Times New Roman") echo "Liberation Serif" ;;
+        "Courier New")     echo "Liberation Mono" ;;
+        *)                 echo "$1" ;;
+    esac
+}
+
 # Copies the reference docx to $2 with font/margin overrides patched in.
 patch_reference_docx() {
     local src="$1" dest="$2" font="$3" margin="$4"
@@ -40,11 +52,14 @@ patch_reference_docx() {
     workdir=$(mktemp -d)
     unzip -q "$src" -d "$workdir"
 
+    # Substituting the bare name would also eat "DejaVu Sans Mono" on the code
+    # style and invent an "Arial Mono"; matching the quoted attribute value
+    # keeps the longer name out of reach.
     if [ "$font" != "DejaVu Sans" ]; then
-        sed -i.bak "s/DejaVu Sans/$font/g" "$workdir/word/styles.xml"
+        sed -i.bak "s/\"DejaVu Sans\"/\"$font\"/g" "$workdir/word/styles.xml"
         rm -f "$workdir/word/styles.xml.bak"
         if [ -f "$workdir/word/theme/theme1.xml" ]; then
-            sed -i.bak "s/DejaVu Sans/$font/g" "$workdir/word/theme/theme1.xml"
+            sed -i.bak "s/\"DejaVu Sans\"/\"$font\"/g" "$workdir/word/theme/theme1.xml"
             rm -f "$workdir/word/theme/theme1.xml.bak"
         fi
     fi
@@ -94,6 +109,7 @@ INPUT=""
 OUTPUT=""
 MARGIN="2.5cm"
 FONT="DejaVu Sans"
+FONT_SET=false
 LOGO=""
 AUTHOR=""
 DATE=""
@@ -111,6 +127,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         -f|--font)
             FONT="$2"
+            FONT_SET=true
             shift 2
             ;;
         --logo)
@@ -331,6 +348,14 @@ if [ "$FORMAT" = "docx" ]; then
         CONVERSION_RESULT=$?
     fi
 else
+    # Only an explicit --font sets mainfont, so untouched documents keep
+    # rendering in LaTeX's own default. templates/config.tex guards the switch,
+    # falling back to that default when the font is absent from the image.
+    MAINFONT_ARG=()
+    if [ "$FONT_SET" = true ]; then
+        MAINFONT_ARG=(-V "mainfont=$(pdf_font_alias "$FONT")")
+    fi
+
     "$CONTAINER_ENGINE" run --rm \
         "${ENGINE_RUN_FLAGS[@]}" \
         -v "$INPUT_DIR:/data" \
@@ -354,6 +379,7 @@ else
         --lua-filter /filters/table-autofit.lua \
         --template /templates/config.tex \
         --shift-heading-level-by=-1 \
+        "${MAINFONT_ARG[@]}" \
         -H /templates/header.tex \
         "${HEADER_INCLUDE[@]}" \
         -B /templates/titlepage.tex \
@@ -371,6 +397,9 @@ fi
 if [ -n "$TEMP_REFERENCE" ] && [ -f "$TEMP_REFERENCE" ]; then
     rm -f "$TEMP_REFERENCE"
 fi
+# Probing for a font that is not in the image makes TeX log the miss next to the
+# input file. The conversion falls back and succeeds, so the log is just litter.
+rm -f "$INPUT_DIR/missfont.log"
 
 if [ $CONVERSION_RESULT -eq 0 ]; then
     # Move temp file to final destination

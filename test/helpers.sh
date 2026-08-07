@@ -26,6 +26,12 @@ pdf_page_of() {
   return 1
 }
 
+# pdf_font_names <pdf> — one base font name per line, with the six-letter
+# subset prefix that pdffonts prepends ("ABCDEF+DejaVuSans") stripped off
+pdf_font_names() {
+  pdffonts "$1" 2>/dev/null | awk 'NR > 2 { sub(/^[A-Z]{6}\+/, "", $1); print $1 }'
+}
+
 # lacks <needle> <text> — passes when <text> does not contain <needle>
 lacks() {
   ! grep -qF "$1" <<< "$2"

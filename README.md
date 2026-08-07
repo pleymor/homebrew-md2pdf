@@ -64,7 +64,7 @@ All options are optional.
 | Option | Description | Default value |
 |--------|-------------|-------------------|
 | `-m, --margin SIZE` | Document margins | `2.5cm` |
-| `-f, --font FONT` | Main font | `DejaVu Sans` |
+| `-f, --font FONT` | Main font | `DejaVu Sans` (Word), Latin Modern (PDF) |
 | `--logo FILE` | Logo for the title page | none |
 | `--author AUTHOR` | Document author | none |
 | `--date DATE` | Document date | today's date |
@@ -73,6 +73,14 @@ All options are optional.
 
 > [!NOTE]
 > The title page is only generated if at least one of the `--logo`, `--author` or `--date` options is specified.
+
+#### About fonts
+
+`--font` sets the font for body text, headings, tables and the table of contents. Code blocks always stay monospaced, in both formats.
+
+The container ships the DejaVu and Liberation families. `Arial`, `Times New Roman` and `Courier New` are rendered through their metrically identical Liberation equivalents, so line breaks and page counts match the real thing.
+
+For PDF output, a font the container does not carry is ignored and the default is kept. Word output is different: the name is written into the document as-is and resolved on the reader's machine, so any font installed there works.
 
 ### Examples
 

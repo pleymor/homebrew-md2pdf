@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Patches an unzipped pandoc default reference.docx in place.
 
-- Sets every font to DejaVu Sans (styles.xml literals + theme fonts)
+- Sets every font to DejaVu Sans (styles.xml <w:rFonts> + theme fonts), except
+  the code style which stays on DejaVu Sans Mono
 - Centers the Title, Subtitle, Author and Date paragraph styles
 - Adds the TitleLogo, Checklist, TOC* and Alert* paragraph styles used by the Lua filters
 - Sets default page margins to 2.5cm (1417 twips)
@@ -67,6 +68,9 @@ TITLELOGO_STYLE = (
     '<w:pPr><w:jc w:val="center"/><w:spacing w:before="3000" w:after="600"/></w:pPr>'
     "</w:style>"
 )
+
+FONT = "DejaVu Sans"
+MONO_FONT = "DejaVu Sans Mono"
 
 MARGIN_TWIPS = "1417"  # 2.5 cm
 
@@ -178,13 +182,48 @@ def border_table_style(xml: str) -> str:
     return xml[: match.start()] + block + xml[match.end():]
 
 
+def set_fonts(xml: str) -> str:
+    """Points every <w:rFonts> in styles.xml at DejaVu Sans.
+
+    Pandoc names no font directly: every style binds one through a theme
+    reference (w:asciiTheme="minorHAnsi"). Those references have to be replaced
+    rather than merely dropped - an empty <w:rFonts/> is not "inherit", it makes
+    Word fall back to its built-in Times New Roman.
+
+    The rewrite is scoped to the element because w:eastAsia also names an
+    attribute of <w:lang>, where a font name would be meaningless.
+    """
+    return re.sub(r"<w:rFonts\b[^>]*/>", rfonts(FONT), xml)
+
+
+def rfonts(font: str) -> str:
+    return (
+        f'<w:rFonts w:ascii="{font}" w:hAnsi="{font}" '
+        f'w:cs="{font}" w:eastAsia="{font}"/>'
+    )
+
+
+def set_mono_font(xml: str) -> str:
+    """Puts the code character style back on a fixed-width font.
+
+    set_fonts() flattens every <w:rFonts> onto the main font, code included, so
+    the code style has to be restored afterwards. Fixed width is what makes a
+    code block readable, and the PDF side pins \\setmonofont for the same reason.
+    """
+    return re.sub(
+        r'<w:style [^>]*w:styleId="VerbatimChar".*?</w:style>',
+        lambda m: re.sub(r"<w:rFonts\b[^>]*/>", rfonts(MONO_FONT), m.group(0)),
+        xml,
+        flags=re.S,
+    )
+
+
 def main() -> None:
     ref = Path(sys.argv[1])
 
     styles_path = ref / "word" / "styles.xml"
     xml = styles_path.read_text(encoding="utf-8")
-    xml = re.sub(r'w:(ascii|hAnsi|cs|eastAsia)="[^"]*"', r'w:\1="DejaVu Sans"', xml)
-    xml = re.sub(r'\s*w:(asciiTheme|hAnsiTheme|cstheme|eastAsiaTheme)="[^"]*"', "", xml)
+    xml = set_mono_font(set_fonts(xml))
     for sid in ("Title", "Subtitle", "Author", "Date"):
         xml = center_style(xml, sid)
     xml = border_table_style(xml)
@@ -206,7 +245,7 @@ def main() -> None:
     theme_path = ref / "word" / "theme" / "theme1.xml"
     if theme_path.exists():
         theme = theme_path.read_text(encoding="utf-8")
-        theme = re.sub(r'(<a:latin typeface=")[^"]*(")', r"\1DejaVu Sans\2", theme)
+        theme = re.sub(r'(<a:latin typeface=")[^"]*(")', rf"\1{FONT}\2", theme)
         theme_path.write_text(theme, encoding="utf-8")
 
     doc_path = ref / "word" / "document.xml"

@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     texlive-latex-recommended \
     texlive-latex-extra \
     fonts-dejavu \
+    fonts-liberation \
     fonts-symbola \
     chromium \
     && rm -rf /var/lib/apt/lists/*

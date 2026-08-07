@@ -10,6 +10,12 @@
 \usepackage{multirow}
 \usepackage{float}
 \usepackage{fontspec}  % XeLaTeX Unicode font support
+$if(mainfont)$
+% Only set when --font was passed, so untouched documents keep LaTeX's default.
+% XeLaTeX aborts on a font it cannot find, hence the guard: an unavailable font
+% silently leaves the default in place rather than failing the whole run.
+\IfFontExistsTF{$mainfont$}{\setmainfont{$mainfont$}}{}
+$endif$
 \setmonofont{DejaVu Sans Mono}[Scale=0.9]  % Monospace font with Unicode support
 
 % Force figures to stay in place (no floating)
