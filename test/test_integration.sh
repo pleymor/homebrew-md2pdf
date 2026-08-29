@@ -15,13 +15,23 @@ check "docx has TOC field" grep -q 'TOC .o "1-3"' <<< "$doc"
 check "docx cover has author" grep -q 'Test Author' <<< "$doc"
 check "docx has page breaks" grep -q '<w:br w:type="page"/>' <<< "$doc"
 check "docx alert styled" grep -q 'w:val="AlertNote"' <<< "$doc"
+# Bullets written straight under a line of text inside a > [!NOTE] block must
+# stay a list (see INPUT_FORMAT in md2pdf.sh), not collapse into "* un * dos".
+check "docx note bullets are not literal asterisks" lacks '* un' "$doc"
+note_bullets=$(python3 test/docx_note_bullets.py test/tmp/example.docx)
+check "docx note bullets became list items" test "$(sed -n 's/^bulleted=//p' <<< "$note_bullets")" -eq 4
+# ...and carry the note's own style, so the coloured bar and the tinted
+# background run behind them instead of stopping at the text above.
+check "docx note bullets carry the note style" \
+  test "$(sed -n 's/^styles=//p' <<< "$note_bullets")" = "AlertNote,AlertNote,AlertNote,AlertNote"
+check "docx alert item bookmarks are cleaned up" lacks 'md2pdf-alert-' "$doc"
 check "docx embeds images" bash -c "unzip -l test/tmp/example.docx | grep -q 'word/media/'"
 # Task lists must reach Word as clickable checkboxes, not bullet + glyph
 checklist=$(python3 test/docx_checklist.py test/tmp/example.docx 2>/dev/null)
 check "docx checklist has clickable checkboxes" test "$(sed -n 's/^checkboxes=//p' <<< "$checklist")" -eq 3
 check "docx checklist items are not bulleted" test "$(sed -n 's/^bulleted_tasks=//p' <<< "$checklist")" -eq 0
-# The TOC ships filled in, and nothing asks Word to update fields on open
-# (that only produces a prompt, and answering "no" leaves the TOC empty).
+# The TOC ships with its entries already computed, so no field refresh is
+# needed to read it (only the page numbers need Word's layout engine).
 settings=$(unzip -p test/tmp/example.docx word/settings.xml 2>/dev/null)
 check "docx does not ask Word to update fields on open" lacks 'updateFields' "$settings"
 toc=$(python3 test/docx_toc.py test/tmp/example.docx)
@@ -90,6 +100,12 @@ check "lists: every numbered list restarts at 1" test "$(list_stat restarts)" -e
 ./md2pdf.sh example.md test/tmp/example.pdf
 check "pdf conversion exits 0" test $? -eq 0
 check "pdf file exists" test -f test/tmp/example.pdf
+# Same reader fix on the PDF side: the note's bullets must render as a list,
+# not as a run of asterisks inside the paragraph.
+note_page=$(pdftotext -f 1 -l 99 test/tmp/example.pdf - 2>/dev/null)
+check "pdf note bullets are not literal asterisks" lacks '* un' "$note_page"
+check "pdf note keeps every bullet" \
+  test "$(grep -cE '^\s*[•*-]?\s*(un|dos|tres|un pasido bardate Maria)\s*$' <<< "$note_page")" -ge 4
 
 # --font has to reach the PDF as well: it used to be parsed and then dropped, so
 # every PDF rendered in XeLaTeX's Latin Modern default whatever was asked for.

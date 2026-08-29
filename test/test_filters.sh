@@ -61,6 +61,29 @@ check "alerts: latex keeps italic in the first paragraph" grep -q '\\emph{italic
 check "alerts: latex keeps code in the first paragraph" grep -q '\\texttt{code}' <<< "$alerts_tex"
 check "alerts: latex keeps links in the first paragraph" grep -q 'example.com' <<< "$alerts_tex"
 
+# A list inside an alert has to reach the docx marked, so that
+# scripts/patch_alert_lists.py can give the items the alert's own style.
+printf '> [!NOTE]\n> Text.\n>\n> * un\n> * dos\n' > test/tmp/alert-list.md
+run_pandoc alert-list.docx /out/alert-list.md --lua-filter /filters/alerts.lua
+alert_list_xml=$(docxml alert-list.docx)
+check "alerts: docx marks each list item" \
+  test "$(grep -o 'md2pdf-alert-AlertNote-[0-9]*' <<< "$alert_list_xml" | wc -l)" -eq 2
+python3 - "test/tmp/alert-list.docx" <<'PYEOF'
+import sys
+sys.path.insert(0, "scripts")
+from patch_alert_lists import patch_docx
+from pathlib import Path
+patch_docx(Path(sys.argv[1]))
+PYEOF
+patched_xml=$(docxml alert-list.docx)
+check "alerts: patched items carry the note style" \
+  test "$(grep -o '<w:pStyle w:val="AlertNote" />' <<< "$patched_xml" | wc -l)" -ge 4
+check "alerts: patch removes its bookmarks" lacks 'md2pdf-alert-' "$patched_xml"
+
+alert_list_tex=$(docker run --rm -v "$PWD/filters:/filters" -v "$PWD/test/tmp:/out" md2pdf \
+  pandoc /out/alert-list.md -t latex --lua-filter /filters/alerts.lua)
+check "alerts: latex has no bookmark leak" lacks 'md2pdf-alert-' "$alert_list_tex"
+
 # --- checklist-docx.lua ---
 run_pandoc checklist.docx /data/checklist.md --lua-filter /filters/checklist-docx.lua
 checklist_stats=$(python3 test/docx_checklist.py test/tmp/checklist.docx)

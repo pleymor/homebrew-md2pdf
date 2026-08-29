@@ -76,6 +76,46 @@ local function remove_alert_marker(inlines, alert_type)
   return kept
 end
 
+---Counts the marked items so every bookmark gets a name of its own.
+local marked_item_count = 0
+
+---Wraps each item of a list in a Div named after the alert style.
+---@param list table a BulletList or OrderedList
+---@param style string the Alert* style the items belong to
+---@return table list
+local function mark_items(list, style)
+  local items = {}
+  for _, item in ipairs(list.content) do
+    marked_item_count = marked_item_count + 1
+    local id = string.format("md2pdf-alert-%s-%d", style, marked_item_count)
+    items[#items + 1] = { pandoc.Div(item, pandoc.Attr(id, {}, {})) }
+  end
+  list.content = items
+  return list
+end
+
+---Wraps every list item of a block in an identified Div, at any nesting depth.
+---
+---Pandoc drops a custom-style Div placed inside a list item, so the alert
+---styling cannot reach the item that way. An id survives as a block-level
+---bookmark around the item's paragraphs, which scripts/patch_alert_lists.py
+---then turns into the real paragraph style.
+---@param block table a block from the alert body
+---@param style string the Alert* style the items belong to
+---@return table block
+local function mark_list_items(block, style)
+  -- walk_block only visits the descendants, so a list sitting straight in the
+  -- alert has to be marked on its own after its nested lists have been.
+  local walked = pandoc.walk_block(block, {
+    BulletList = function(list) return mark_items(list, style) end,
+    OrderedList = function(list) return mark_items(list, style) end,
+  })
+  if walked.t == "BulletList" or walked.t == "OrderedList" then
+    return mark_items(walked, style)
+  end
+  return walked
+end
+
 function BlockQuote(el)
   if #el.content == 0 then
     return el
@@ -111,12 +151,13 @@ function BlockQuote(el)
   end
 
   if FORMAT == "docx" then
+    local style = "Alert" .. config.title
     local blocks = pandoc.List()
     blocks:insert(pandoc.Para(pandoc.Strong(pandoc.Str(config.title))))
     for _, block in ipairs(new_content) do
-      blocks:insert(block)
+      blocks:insert(mark_list_items(block, style))
     end
-    return pandoc.Div(blocks, pandoc.Attr("", {}, { ["custom-style"] = "Alert" .. config.title }))
+    return pandoc.Div(blocks, pandoc.Attr("", {}, { ["custom-style"] = style }))
   end
 
   -- Create LaTeX box

@@ -3,3 +3,4 @@
 core
 mermaid-filter.err
 test/tmp/
+__pycache__/

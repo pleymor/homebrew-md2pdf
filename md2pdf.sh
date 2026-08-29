@@ -262,6 +262,12 @@ if [ -n "$LOGO" ]; then
 fi
 
 # Build title page header with LaTeX definitions (for logo override)
+# Pandoc's markdown needs a blank line before a list, while GitHub lets a list
+# interrupt a paragraph. lists_without_preceding_blankline matches GitHub, so
+# bullets written straight under a line of text — the usual shape inside a
+# > [!NOTE] block — stay a list instead of collapsing into "* un * dos".
+INPUT_FORMAT="markdown-implicit_figures+lists_without_preceding_blankline"
+
 TITLEPAGE_HEADER=""
 HEADER_INCLUDE=()
 if [ "$FORMAT" = "pdf" ] && { [ -n "$LOGO" ] || [ -n "$AUTHOR" ] || [ -n "$DATE" ]; }; then
@@ -333,20 +339,22 @@ if [ "$FORMAT" = "docx" ]; then
         "$REFERENCE_ARG" \
         --shift-heading-level-by=-1 \
         "${META_ARGS[@]}" \
-        -f markdown-implicit_figures
+        -f "$INPUT_FORMAT"
     CONVERSION_RESULT=$?
 
-    # Pandoc points every ordered list at one abstract numbering definition, so
-    # Word carries the count over from one list to the next; give each list its
-    # own definition to make them all start again at 1.
-    if [ $CONVERSION_RESULT -eq 0 ]; then
+    # Two things pandoc's docx writer cannot get right on its own, each
+    # fixed by rewriting one part of the finished file:
+    #   restart_list_numbering - every ordered list starts again at 1
+    #   patch_alert_lists      - list items inside an alert keep the alert style
+    for post_script in restart_list_numbering patch_alert_lists; do
+        [ $CONVERSION_RESULT -eq 0 ] || break
         "$CONTAINER_ENGINE" run --rm \
             "${ENGINE_RUN_FLAGS[@]}" \
             -v "$INPUT_DIR:/data" \
             md2pdf \
-            python3 /scripts/restart_list_numbering.py "/data/$TEMP_OUTPUT_FILE"
+            python3 "/scripts/$post_script.py" "/data/$TEMP_OUTPUT_FILE"
         CONVERSION_RESULT=$?
-    fi
+    done
 else
     # Only an explicit --font sets mainfont, so untouched documents keep
     # rendering in LaTeX's own default. templates/config.tex guards the switch,
@@ -383,7 +391,7 @@ else
         -H /templates/header.tex \
         "${HEADER_INCLUDE[@]}" \
         -B /templates/titlepage.tex \
-        -f markdown-implicit_figures
+        -f "$INPUT_FORMAT"
     CONVERSION_RESULT=$?
 fi
 

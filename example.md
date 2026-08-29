@@ -195,6 +195,12 @@ The PDF output should be **clean** and **professional**! 🎉
 > [!NOTE]  
 > Highlights information that users should take into account, even when skimming.
 > It supports **formatting** and multiline content.
+> * un
+> * dos
+> * tres
+> * un pasido bardate Maria
+> 
+> Wepa
 
 > [!TIP]
 > Optional information to help a user be more successful.
