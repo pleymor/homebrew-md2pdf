@@ -165,10 +165,9 @@ $endif$
   \small\centering%
 }
 
-% Thicker top and bottom rules (IEEE style)
-\setlength{\heavyrulewidth}{0.08em}
-\setlength{\lightrulewidth}{0.05em}
-\setlength{\cmidrulewidth}{0.03em}
+% Grid lines around and inside every cell (see filters/table-autofit.lua,
+% which emits \hline rules and a "|"-separated column spec).
+\setlength{\arrayrulewidth}{0.4pt}
 
 % Better figure handling - prevent orphaned captions
 \usepackage[section]{placeins}

@@ -82,6 +82,7 @@ local function compute_widths(max_lengths, num_cols, available)
 end
 
 --- Builds a LaTeX column spec from precomputed widths.
+--- Columns are separated and surrounded by "|" so the table gets a full grid.
 --- @param widths table Width per column (fractions of \textwidth)
 --- @param aligns table Pandoc alignment per column
 --- @param num_cols number Number of columns
@@ -101,7 +102,7 @@ local function build_colspec(widths, aligns, num_cols)
     specs[#specs + 1] = string.format(">{%s}p{%.4f\\textwidth}", ragged, widths[i])
   end
 
-  return table.concat(specs, " ")
+  return "|" .. table.concat(specs, "|") .. "|"
 end
 
 --- Renders a table row (list of cells) to LaTeX.
@@ -190,15 +191,17 @@ function Table(tbl)
   -- Build LaTeX
   -- Reserve space for inter-column padding: 2 * \tabcolsep (6pt) per column
   -- With \textwidth ~ 455pt (letter, 0.75in margins), 12pt/455pt ≈ 0.026
+  -- The grid adds num_cols + 1 vertical rules of \arrayrulewidth (0.4pt) each.
   local padding_per_col = 0.026
-  local available = 1.0 - (num_cols * padding_per_col)
+  local rule_width = 0.0009
+  local available = 1.0 - (num_cols * padding_per_col) - ((num_cols + 1) * rule_width)
   if available < 0.3 then available = 0.3 end
   local widths = compute_widths(max_lengths, num_cols, available)
   local colspec = build_colspec(widths, aligns, num_cols)
   local lines = {}
 
-  lines[#lines + 1] = string.format("\\begin{longtable}[]{@{}%s@{}}", colspec)
-  lines[#lines + 1] = "\\toprule"
+  lines[#lines + 1] = string.format("\\begin{longtable}[]{%s}", colspec)
+  lines[#lines + 1] = "\\hline"
 
   -- Header rows
   for _, row in ipairs(headers) do
@@ -210,16 +213,16 @@ function Table(tbl)
   end
 
   if #headers > 0 then
-    lines[#lines + 1] = "\\midrule"
+    lines[#lines + 1] = "\\hline"
     lines[#lines + 1] = "\\endhead"
   end
 
-  -- Body rows
+  -- Body rows, each closed by the rule that also serves as the next row's top
   for _, row in ipairs(body_rows) do
     lines[#lines + 1] = render_row(row) .. " \\\\"
+    lines[#lines + 1] = "\\hline"
   end
 
-  lines[#lines + 1] = "\\bottomrule"
   lines[#lines + 1] = "\\end{longtable}"
 
   return pandoc.RawBlock("latex", table.concat(lines, "\n"))

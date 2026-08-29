@@ -92,6 +92,17 @@ check "table: long column wider than short" test "${w2:-0}" -gt "${w1:-0}"
 table_tex=$(run_pandoc_text /data/table.md -t latex --lua-filter /filters/table-autofit.lua)
 check "table: latex still emits longtable" grep -q 'longtable' <<< "$table_tex"
 
+# Full grid: a vertical rule on both edges and between the two columns, plus a
+# horizontal rule above the header, under it, and under each of the two body rows.
+colspec=$(sed -n 's/.*\\begin{longtable}\[\]{\(.*\)}.*/\1/p' <<< "$table_tex")
+check "table: latex draws the outer vertical borders" \
+  bash -c '[[ "$1" == \|*\| ]]' _ "$colspec"
+check "table: latex draws a vertical rule between columns" \
+  test "$(grep -o '|' <<< "$colspec" | wc -l)" -eq 3
+check "table: latex rules every row" \
+  test "$(grep -c '\\hline' <<< "$table_tex")" -eq 4
+check "table: latex drops the booktabs rules" lacks '\toprule' "$table_tex"
+
 # --- titlepage-docx.lua ---
 run_pandoc cover.docx /data/cover.md \
   --shift-heading-level-by=-1 \
