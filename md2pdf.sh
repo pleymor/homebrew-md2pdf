@@ -342,11 +342,12 @@ if [ "$FORMAT" = "docx" ]; then
         -f "$INPUT_FORMAT"
     CONVERSION_RESULT=$?
 
-    # Two things pandoc's docx writer cannot get right on its own, each
+    # Three things pandoc's docx writer cannot get right on its own, each
     # fixed by rewriting one part of the finished file:
     #   restart_list_numbering - every ordered list starts again at 1
     #   patch_alert_lists      - list items inside an alert keep the alert style
-    for post_script in restart_list_numbering patch_alert_lists; do
+    #   enable_field_update    - Word refreshes the TOC page numbers on open
+    for post_script in restart_list_numbering patch_alert_lists enable_field_update; do
         [ $CONVERSION_RESULT -eq 0 ] || break
         "$CONTAINER_ENGINE" run --rm \
             "${ENGINE_RUN_FLAGS[@]}" \

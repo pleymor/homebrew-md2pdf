@@ -1,8 +1,9 @@
 --[[
   Pandoc Lua filter (docx only) that builds a cover page from metadata
   (titlelogo, title, author, date) and injects a native Word TOC field.
-  md2pdf.sh flags the document's fields for refresh, so Word fills the TOC in
-  when the document opens; the placeholder below only shows if it does not.
+  scripts/enable_field_update.py sets <w:updateFields> on the finished file, so
+  Word refreshes the TOC as it opens and fills in the page numbers only it can
+  compute; the stored result built below is what readers see until it does.
 ]]
 
 local PAGEBREAK = '<w:p><w:r><w:br w:type="page"/></w:r></w:p>'

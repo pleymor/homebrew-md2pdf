@@ -30,10 +30,11 @@ check "docx embeds images" bash -c "unzip -l test/tmp/example.docx | grep -q 'wo
 checklist=$(python3 test/docx_checklist.py test/tmp/example.docx 2>/dev/null)
 check "docx checklist has clickable checkboxes" test "$(sed -n 's/^checkboxes=//p' <<< "$checklist")" -eq 3
 check "docx checklist items are not bulleted" test "$(sed -n 's/^bulleted_tasks=//p' <<< "$checklist")" -eq 0
-# The TOC ships with its entries already computed, so no field refresh is
-# needed to read it (only the page numbers need Word's layout engine).
+# The TOC ships filled in, so it reads fine even without a refresh. Page numbers
+# are the one part only a layout engine can produce, so the document does ask
+# Word to update its fields on open; declining still leaves the entries in place.
 settings=$(unzip -p test/tmp/example.docx word/settings.xml 2>/dev/null)
-check "docx does not ask Word to update fields on open" lacks 'updateFields' "$settings"
+check "docx asks Word to update fields on open" grep -q '<w:updateFields w:val="true"/>' <<< "$settings"
 toc=$(python3 test/docx_toc.py test/tmp/example.docx)
 check "docx TOC lists the headings" test "$(sed -n 's/^entries=//p' <<< "$toc")" -ge 10
 check "docx TOC entries match the headings" test "$(sed -n 's/^mismatch=//p' <<< "$toc")" -eq 0
